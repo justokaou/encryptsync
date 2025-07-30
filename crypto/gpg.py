@@ -16,4 +16,4 @@ def encrypt_file(input_path, output_dir, recipient):
         input_path
     ]
     subprocess.run(cmd, check=True)
-    print(f"Encrypted {input_path} → {output_path}")
+    print(f"Encrypted {input_path} > {output_path}")
