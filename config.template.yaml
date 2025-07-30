@@ -1,0 +1,7 @@
+syncs:
+  - name: example-notes
+    plain_dir: /home/user/notes
+    encrypted_dir: /home/user/.encrypted/notes
+    recipient: your-key-id-or-email
+    direction: both            # or encrypt-only / decrypt-only
+    clear_on_shutdown: false
