@@ -7,6 +7,7 @@ def encrypt_file(input_path, output_dir, recipient):
 
     cmd = [
         "gpg",
+        "--trust-model", "always",
         "--batch",
         "--yes",
         "--encrypt",
