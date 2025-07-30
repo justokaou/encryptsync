@@ -3,3 +3,4 @@ __pycache__/
 venv/
 config.yaml
 config.local.yaml
+.encryptsync-cache.json
