@@ -2,7 +2,18 @@ from watchdog.events import FileSystemEventHandler
 from crypto.gpg import encrypt_file, decrypt_file 
 from cache import load_cache, save_cache
 from utils.hash import file_sha256
+from filelock import FileLock, Timeout
 import os
+
+LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))
+LOCK = FileLock(LOCK_PATH)
+
+def is_locked() -> bool:
+    try:
+        with LOCK.acquire(timeout=0.1):
+            return False
+    except Timeout:
+        return True
 
 def is_valid_file(path: str) -> bool:
     filename = os.path.basename(path)
@@ -13,6 +24,7 @@ def is_valid_file(path: str) -> bool:
         and not filename.startswith("#")
     )
 
+
 class EncryptHandler(FileSystemEventHandler):
     def __init__(self, config):
         self.config = config
@@ -21,7 +33,7 @@ class EncryptHandler(FileSystemEventHandler):
         self.scanning = False
 
     def on_modified(self, event):
-        if self.scanning or event.is_directory or not is_valid_file(event.src_path):
+        if is_locked() or self.scanning or event.is_directory or not is_valid_file(event.src_path):
             return
 
         rel_path = os.path.relpath(event.src_path, self.config.plain_dir)
@@ -48,12 +60,7 @@ class EncryptHandler(FileSystemEventHandler):
             self.processing.remove(rel_path)
 
     def on_deleted(self, event):
-        print("DEBUG: on_deleted triggered", event.src_path)
-        
-        if os.path.exists(".encryptsync.lock"):
-            return
-        
-        if event.is_directory or not is_valid_file(event.src_path):
+        if is_locked() or event.is_directory or not is_valid_file(event.src_path):
             return
 
         rel_path = os.path.relpath(event.src_path, self.config.plain_dir)
@@ -96,7 +103,6 @@ class EncryptHandler(FileSystemEventHandler):
             print("Scan completed for encryption handler.")
 
 
-
 class DecryptHandler(FileSystemEventHandler):
     def __init__(self, config):
         self.config = config
@@ -111,7 +117,7 @@ class DecryptHandler(FileSystemEventHandler):
         self._handle_event(event)
 
     def _handle_event(self, event):
-        if self.scanning or event.is_directory or not event.src_path.endswith(".gpg"):
+        if is_locked() or self.scanning or event.is_directory or not event.src_path.endswith(".gpg"):
             return
 
         rel_path = os.path.splitext(os.path.relpath(event.src_path, self.config.encrypted_dir))[0]
@@ -119,6 +125,11 @@ class DecryptHandler(FileSystemEventHandler):
             return
 
         output_path = os.path.join(self.config.plain_dir, rel_path)
+
+        if os.path.exists(output_path):
+            current_hash = file_sha256(output_path)
+            if self.cache.get(rel_path) == current_hash:
+                return
 
         self.processing.add(rel_path)
         try:
@@ -137,7 +148,7 @@ class DecryptHandler(FileSystemEventHandler):
             self.processing.remove(rel_path)
 
     def on_deleted(self, event):
-        if event.is_directory or not event.src_path.endswith(".gpg"):
+        if is_locked() or event.is_directory or not event.src_path.endswith(".gpg"):
             return
 
         rel_path = os.path.splitext(os.path.relpath(event.src_path, self.config.encrypted_dir))[0]
@@ -163,7 +174,6 @@ class DecryptHandler(FileSystemEventHandler):
                     rel_path = os.path.splitext(os.path.relpath(full_path, self.config.encrypted_dir))[0]
                     plain_path = os.path.join(self.config.plain_dir, rel_path)
 
-                    # Déchiffrer uniquement si fichier clair manquant ou invalide
                     if os.path.exists(plain_path):
                         plain_hash = file_sha256(plain_path)
                         if self.cache.get(rel_path) == plain_hash:
