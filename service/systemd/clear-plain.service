@@ -1,0 +1,11 @@
+[Unit]
+Description=Clear plain directory on shutdown
+DefaultDependencies=no
+Before=shutdown.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python /path/to/clear_plain.py
+
+[Install]
+WantedBy=shutdown.target
