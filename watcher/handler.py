@@ -2,6 +2,7 @@ from watchdog.events import FileSystemEventHandler
 from crypto.gpg import encrypt_file, decrypt_file 
 from cache import load_cache, save_cache
 from utils.hash import file_sha256
+from utils.file import is_valid_file
 from filelock import FileLock, Timeout
 import os
 
@@ -14,15 +15,6 @@ def is_locked() -> bool:
             return False
     except Timeout:
         return True
-
-def is_valid_file(path: str) -> bool:
-    filename = os.path.basename(path)
-    return (
-        not filename.startswith(".")
-        and not filename.endswith("~")
-        and not filename.endswith(".swp")
-        and not filename.startswith("#")
-    )
 
 
 class EncryptHandler(FileSystemEventHandler):

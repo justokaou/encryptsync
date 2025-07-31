@@ -3,22 +3,8 @@ from config import load_config
 from cache import load_cache, save_cache
 from crypto.gpg import decrypt_file
 from utils.hash import file_sha256
-
-def is_valid_file(path):
-    fname = os.path.basename(path)
-    return (
-        not fname.startswith(".")
-        and not fname.endswith("~")
-        and not fname.endswith(".swp")
-        and not fname.startswith("#")
-    )
-
-def find_matching_sync(path, config, mode):
-    for sync in config:
-        base = sync.plain_dir if mode == "encrypt" else sync.encrypted_dir
-        if os.path.commonpath([os.path.abspath(path), base]) == os.path.abspath(base):
-            return sync
-    return None
+from utils.file import is_valid_file
+from utils.config import find_matching_sync
 
 def decrypt_path(target_path, config, output_override=None):
     cache = load_cache()
