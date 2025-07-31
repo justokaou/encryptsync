@@ -1,11 +1,13 @@
 [Unit]
-Description=Clear plain directory on shutdown
+Description=Clear plaintext files before shutdown
 DefaultDependencies=no
 Before=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python /path/to/clear_plain.py
+ExecStart=/usr/bin/env python3 /path/to/encryptsyncctl.py clear
+WorkingDirectory=/path/to/project
+Environment="PATH=/path/to/venv/bin:/usr/bin:/bin"
 
 [Install]
 WantedBy=shutdown.target

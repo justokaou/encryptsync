@@ -13,9 +13,9 @@ def clear_plain(config):
         return
 
     open(PAUSE_FLAG, "w").close()
-    print("[clear] Pause demandée. Attente watchers...")
+    print("[clear] Pause asked. Waiting watchers...")
 
-    time.sleep(1)  # Optionnel : attendre que les handlers relâchent
+    time.sleep(1)  # Optionnal : give time for watchers to pause
 
     print(f"[clear] Acquiring lock: {LOCK_PATH}")
     try:

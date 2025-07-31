@@ -59,7 +59,7 @@ class EncryptHandler(FileSystemEventHandler):
         encrypted_path = os.path.join(self.config.encrypted_dir, rel_path + ".gpg")
         if os.path.exists(encrypted_path):
             os.remove(encrypted_path)
-            print(f"Encrypted file deleted: {encrypted_path}")
+            print(f"[delete] {encrypted_path}")
         self.cache.pop(rel_path, None)
         save_cache(self.cache)
 
@@ -147,7 +147,7 @@ class DecryptHandler(FileSystemEventHandler):
         plain_path = os.path.join(self.config.plain_dir, rel_path)
         if os.path.exists(plain_path):
             os.remove(plain_path)
-            print(f"Decrypted file deleted: {plain_path}")
+            print(f"[delete] {plain_path}")
         self.cache.pop(rel_path, None)
         save_cache(self.cache)
 
