@@ -1,10 +1,10 @@
 import os
-from config import load_config
-from cache import load_cache, save_cache
+from utils.config import load_config
+from utils.cache import load_cache, save_cache
 from crypto.gpg import decrypt_file
 from utils.hash import file_sha256
 from utils.file import is_valid_file
-from utils.config import find_matching_sync
+from utils.lookup import find_matching_sync
 
 def decrypt_path(target_path, config, output_override=None):
     cache = load_cache()

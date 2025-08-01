@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os, time
 import argparse
-from config import load_config
+from utils.config import load_config
 
 from cli.encrypt import encrypt_path
 from cli.decrypt import decrypt_path

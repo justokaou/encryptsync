@@ -1,6 +1,6 @@
 import os
 import time
-from config import load_config
+from utils.config import load_config
 from watcher.dispatcher import start_watcher
 from watchdog.observers import Observer
 

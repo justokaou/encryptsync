@@ -1,8 +1,8 @@
 from crypto.gpg import encrypt_file
 from utils.hash import file_sha256
-from cache import load_cache, save_cache
+from utils.cache import load_cache, save_cache
 from utils.file import is_valid_file
-from utils.config import find_matching_sync
+from utils.lookup import find_matching_sync
 import os
 
 def encrypt_path(target_path, config, output_override=None):

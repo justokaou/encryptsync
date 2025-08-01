@@ -1,6 +1,6 @@
 from watchdog.events import FileSystemEventHandler
 from crypto.gpg import encrypt_file, decrypt_file 
-from cache import load_cache, save_cache
+from utils.cache import load_cache, save_cache
 from utils.hash import file_sha256
 from utils.file import is_valid_file
 from filelock import FileLock, Timeout
