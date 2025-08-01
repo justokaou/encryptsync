@@ -4,4 +4,3 @@ syncs:
     encrypted_dir: /home/user/.encrypted/notes
     recipient: your-key-id-or-email
     direction: both            # or encrypt-only / decrypt-only
-    clear_on_shutdown: false

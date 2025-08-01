@@ -6,6 +6,7 @@ from config import load_config
 from cli.encrypt import encrypt_path
 from cli.decrypt import decrypt_path
 from cli.clear import clear_plain
+from cli.service import systemctl_cmd
 
 def main():
     parser = argparse.ArgumentParser(description="EncryptedSync control utility")
@@ -21,6 +22,10 @@ def main():
 
     clear = subparsers.add_parser("clear", help="Delete all plaintext files (with pause & lock)")
 
+    ctl = subparsers.add_parser("start", help="Start encryptsync systemd service")
+    ctl = subparsers.add_parser("stop", help="Stop encryptsync systemd service")
+    ctl = subparsers.add_parser("status", help="Status encryptsync systemd service")
+
     args = parser.parse_args()
     config = load_config()
 
@@ -30,6 +35,13 @@ def main():
         decrypt_path(args.path, config, output_override=args.output)
     elif args.command == "clear":
         clear_plain(config)
+    elif args.command == "start":
+        systemctl_cmd("start")
+    elif args.command == "stop":
+        systemctl_cmd("stop")
+    elif args.command == "status":
+        systemctl_cmd("status")
+
 
 
 if __name__ == "__main__":
