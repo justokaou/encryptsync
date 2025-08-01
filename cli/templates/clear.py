@@ -1,3 +1,4 @@
+CLEAR_TEMPLATE = """
 [Unit]
 Description=Clear plaintext files before shutdown
 DefaultDependencies=no
@@ -5,9 +6,10 @@ Before=shutdown.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/env python3 /path/to/encryptsyncctl.py clear
-WorkingDirectory=/path/to/project
-Environment="PATH=/path/to/venv/bin:/usr/bin:/bin"
+WorkingDirectory={project_path}
+ExecStart={python} {project_path}/encryptsyncctl.py clear
+Environment="PATH={venv_bin}:/usr/bin:/bin"
 
 [Install]
 WantedBy=shutdown.target
+"""

@@ -1,3 +1,4 @@
+DAEMON_TEMPLATE = """
 [Unit]
 Description=EncryptedSync daemon (main watcher)
 After=network.target
@@ -5,11 +6,12 @@ Wants=network.target
 
 [Service]
 Type=simple
-WorkingDirectory=/path/to/project
-ExecStart=/usr/bin/env python3 /path/to/project/main.py
+WorkingDirectory={project_path}
+ExecStart={python} {project_path}/main.py
 Restart=always
 RestartSec=3
-Environment="PATH=/path/to/venv/bin:/usr/bin:/bin"
+Environment="PATH={venv_bin}:/usr/bin:/bin"
 
 [Install]
 WantedBy=multi-user.target
+"""
