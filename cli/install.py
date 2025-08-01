@@ -38,20 +38,9 @@ def copy_project_if_needed(mode, target_path):
         print(f"[install] Copying project to {target_path}...")
         shutil.copytree(Path(__file__).resolve().parent.parent, target_path)
 
-
-def link_cli_script(project_path):
-    target = "/usr/local/bin/encryptsyncctl"
-    source = os.path.join(project_path, "encryptsyncctl.py")
-    if not os.path.exists(target):
-        os.symlink(source, target)
-        os.chmod(source, 0o755)
-        print(f"[install] Created symlink: {target} → {source}")
-    else:
-        print(f"[install] CLI already exists at {target}")
-
 def install_service(name, content):
     if os.geteuid() != 0:
-        print("❌ You must run this installer as root to install systemd services.")
+        print("You must run this installer as root to install systemd services.")
         return
 
     path = f"/etc/systemd/system/{name}.service"
@@ -66,7 +55,6 @@ def install():
     mode = ask_mode()
     paths = get_paths(mode)
     copy_project_if_needed(mode, paths["project"])
-    link_cli_script(paths["project"])
 
     if input("Install EncryptedSync daemon? [y/N]: ").lower() == "y":
         install_service("encryptsync", DAEMON_TEMPLATE.format(**paths))

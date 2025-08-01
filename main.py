@@ -18,6 +18,11 @@ if __name__ == "__main__":
     all_handlers = []
 
     for sync in syncs:
+        for path in [sync.plain_dir, sync.encrypted_dir]:
+            if not os.path.isdir(path):
+                print(f"[encryptsync] [ERROR] Directory does not exist: {path}")
+                continue
+        
         all_handlers += start_watcher(sync)
 
     observers = create_observers(all_handlers)

@@ -1,3 +1,0 @@
-filelock==3.18.0
-PyYAML==6.0.2
-watchdog==6.0.0
