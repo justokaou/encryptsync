@@ -6,7 +6,7 @@ from utils.config import load_config
 from cli.encrypt import encrypt_path
 from cli.decrypt import decrypt_path
 from cli.clear import clear_plain
-from cli.service import systemctl_cmd
+from cli.service import systemctl_cmd, status_cmd, print_service_status, print_service_enabled
 from cli.install import install, edit
 
 def main():
@@ -24,9 +24,12 @@ def main():
     clear = subparsers.add_parser("clear", help="Delete all plaintext files (with pause & lock)")
     clear.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
 
-    ctl = subparsers.add_parser("start", help="Start encryptsync systemd service")
-    ctl = subparsers.add_parser("stop", help="Stop encryptsync systemd service")
-    ctl = subparsers.add_parser("status", help="Status encryptsync systemd service")
+    for cmd in ["start", "stop", "status"]:
+        p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service")
+        p.add_argument(
+            "--service", choices=["main", "clear", "all"], default="main",
+            help="Target service to control"
+        )
 
     _install = subparsers.add_parser("install", help="Install EncryptedSync and services")
 
@@ -46,9 +49,19 @@ def main():
     elif args.command == "edit":
         edit()
     elif args.command in {"start", "stop", "status"}:
-        systemctl_cmd(args.command)
-
-
+        if args.command == "status":
+            if args.service == "all":
+                status_cmd()
+            else:
+                target = "encryptsync" 
+                if args.service == "main":
+                    print_service_status(target, target)
+                elif args.service == "clear":
+                    target = "encryptsync-clear"
+                    print_service_enabled(target, target)
+        else:
+            target = "encryptsync" if args.service == "main" else "encryptsync-clear"
+            systemctl_cmd(args.command, target)
 
 if __name__ == "__main__":
     main()

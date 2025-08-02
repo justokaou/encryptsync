@@ -1,8 +1,41 @@
 import subprocess
 
-def systemctl_cmd(action):
+GREEN = "\033[92m"
+RED = "\033[91m"
+RESET = "\033[0m"
+
+def systemctl_cmd(action, service="encryptsync"):
     try:
-        subprocess.run(["systemctl", action, "encryptsync.service"], check=True)
-        print(f"[{action}] Service encryptsync.service {action}ed successfully.")
+        subprocess.run(["systemctl", action, f"{service}.service"], check=True)
+        print(f"[{action}] {service}.service {action}ed successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"[{action}] Failed to {action} service: {e}")
+        print(f"[{action}] Failed to {action} {service}.service: {e}")
+
+def print_service_enabled(service: str, label: str = None):
+    label = label or service
+    try:
+        subprocess.run(
+            ["systemctl", "is-enabled", "--quiet", f"{service}.service"],
+            check=True
+        )
+        status = f"{GREEN}[enabled]{RESET}"
+    except subprocess.CalledProcessError:
+        status = f"{RED}[disabled]{RESET}"
+
+    print(f"{label:<20}: {status}")
+
+def print_service_status(service: str, label: str = None):
+    label = label or service
+    try:
+        subprocess.run(
+            ["systemctl", "is-active", "--quiet", f"{service}.service"],
+            check=True
+        )
+        status = f"{GREEN}[ok]{RESET}"
+    except subprocess.CalledProcessError:
+        status = f"{RED}[down]{RESET}"
+    print(f"{label:<20}: {status}")
+
+def status_cmd():
+    print_service_status("encryptsync", "encryptsync daemon")
+    print_service_enabled("encryptsync-clear", "encryptsync-clear")

@@ -1,4 +1,4 @@
-encryptsync (0.1.6) UNRELEASED; urgency=medium
+encryptsync (0.1.8) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation (/etc/encryptsync/config.yaml).
@@ -8,5 +8,7 @@ encryptsync (0.1.6) UNRELEASED; urgency=medium
   * Fix install error when using system mode with .deb by skipping redundant project copy to /usr/lib/encryptsync
   * Added `encryptsyncctl edit` command to open config.yaml in nano
   * Auto-copy of config.template.yaml to /etc/encryptsync/config.yaml on first install
+  * Added support for controlling both main and clear systemd services via CLI, with color-coded status output.
+  * Fix service status command to properly detect if the oneshot `encryptsync-clear` service is enabled for shutdown.
 
- -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 15:52:49 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 17:23:51 +0200
