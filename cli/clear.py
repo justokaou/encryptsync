@@ -1,7 +1,7 @@
 import os, time
+from filelock import FileLock, Timeout
 
 def clear_plain(config, confirm=True):
-    from filelock import FileLock, Timeout
 
     PAUSE_FLAG = "/tmp/encryptsync.pause"
     LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))

@@ -97,6 +97,11 @@ def install_service(name, content):
     if os.geteuid() != 0:
         print("You must run this installer as root to install systemd services.")
         return
+    
+    log_dir = Path("/var/log/encryptsync")
+    if not log_dir.exists():
+        log_dir.mkdir(parents=True, exist_ok=True)
+        print("[install] Created log directory at /var/log/encryptsync")
 
     path = f"/etc/systemd/system/{name}.service"
     with open(path, "w") as f:
@@ -106,14 +111,27 @@ def install_service(name, content):
     subprocess.run(["systemctl", "start", name], check=True)
     print(f"[install] {name} service installed and started.")
 
-def maybe_install_service(name, template, paths):
-    if not is_service_installed(name):
-        if input(f"Install {name} service? [y/N]: ").lower() == "y":
-            install_service(name, template.format(**paths))
-    else:
-        print(f"[install] {name}.service already installed. Skipping.")
+def maybe_install_service(name, template, paths, force=False):
+    service_path = Path(f"/etc/systemd/system/{name}.service")
 
-def install():
+    if is_service_installed(name) and not force:
+        print(f"[install] {name}.service already installed. Skipping.")
+        return
+
+    if force:
+        print(f"[install] Forcing reinstallation of {name}.service...")
+        if service_path.exists():
+            service_path.unlink()
+            print(f"[install] Removed existing {name}.service before reinstalling.")
+    else:
+        confirm = input(f"Install {name} service? [y/N]: ").lower()
+        if confirm != "y":
+            print(f"[install] Skipping {name}.service.")
+            return
+
+    install_service(name, template.format(**paths))
+
+def install(force=False):
     if is_deb_install():
         mode = "2"
     else:
@@ -127,7 +145,7 @@ def install():
 
     maybe_edit_config(paths)
 
-    maybe_install_service("encryptsync", DAEMON_TEMPLATE, paths)
-    maybe_install_service("encryptsync-clear", CLEAR_TEMPLATE, paths)
+    maybe_install_service("encryptsync", DAEMON_TEMPLATE, paths, force)
+    maybe_install_service("encryptsync-clear", CLEAR_TEMPLATE, paths, force)
 
     print("Installation complete.")

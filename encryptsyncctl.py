@@ -32,6 +32,7 @@ def main():
         )
 
     _install = subparsers.add_parser("install", help="Install EncryptedSync and services")
+    _install.add_argument("--force", "-f" , action="store_true", help="Force reinstall services")
 
     _edit = subparsers.add_parser("edit", help="Edit configuration file")
 
@@ -43,7 +44,7 @@ def main():
     elif args.command == "decrypt":
         decrypt_path(args.path, config, output_override=args.output)
     elif args.command == "install":
-        install()
+        install(force=args.force)
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
