@@ -1,3 +1,20 @@
+# construct .deb file
+debian/encryptsync/
+debian/.debhelper/
+debian/files
+debian/encryptsync.substvars
+debian/encryptsync.postinst.debhelper
+debian/encryptsync.prerm.debhelper
+debian/debhelper-build-stamp
+
+# Build artifacts
+*.build
+*.buildinfo
+*.changes
+*.dsc
+*.tar.*
+*.deb
+
 __pycache__/
 *.pyc
 venv/

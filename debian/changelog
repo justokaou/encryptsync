@@ -1,0 +1,9 @@
+encryptsync (0.1.4) UNRELEASED; urgency=medium
+
+  [ JustOkaou ]
+  * Update config loader to support system-wide installation (/etc/encryptsync/config.yaml).
+  * Fix postinst to deploy default config properly.
+  * Fix project path in cli install command
+  * Fix user interaction in clear cli command for encryptsync-clear service
+
+ -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 15:02:00 +0200

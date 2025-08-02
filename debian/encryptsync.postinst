@@ -1,0 +1,15 @@
+#!/bin/sh
+set -e
+
+ln -sf /usr/lib/encryptsync/encryptsyncctl.py /usr/bin/encryptsyncctl
+chmod +x /usr/lib/encryptsync/encryptsyncctl.py
+
+if [ ! -f /etc/encryptsync/config.yaml ]; then
+    mkdir -p /etc/encryptsync
+    cp /usr/lib/encryptsync/config.template.yaml /etc/encryptsync/config.yaml
+    echo "[postinst] Default config copied to /etc/encryptsync/config.yaml"
+fi
+
+#DEBHELPER#
+
+exit 0

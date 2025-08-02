@@ -7,7 +7,7 @@ Before=shutdown.target
 [Service]
 Type=oneshot
 WorkingDirectory={project_path}
-ExecStart={python} {project_path}/encryptsyncctl.py clear
+ExecStart={python} {project_path}/encryptsyncctl.py clear --yes
 Environment="PATH={venv_bin}:/usr/bin:/bin"
 
 [Install]

@@ -22,6 +22,7 @@ def main():
     dec.add_argument("--output", "-o", help="Override output directory")
 
     clear = subparsers.add_parser("clear", help="Delete all plaintext files (with pause & lock)")
+    clear.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
 
     ctl = subparsers.add_parser("start", help="Start encryptsync systemd service")
     ctl = subparsers.add_parser("stop", help="Stop encryptsync systemd service")
@@ -39,7 +40,7 @@ def main():
     elif args.command == "install":
         install()
     elif args.command == "clear":
-        clear_plain(config)
+        clear_plain(config, confirm=not args.yes)
     elif args.command in {"start", "stop", "status"}:
         systemctl_cmd(args.command)
 

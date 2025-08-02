@@ -1,16 +1,17 @@
 import os, time
 
-def clear_plain(config):
+def clear_plain(config, confirm=True):
     from filelock import FileLock, Timeout
 
     PAUSE_FLAG = "/tmp/encryptsync.pause"
     LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))
     LOCK = FileLock(LOCK_PATH, timeout=5)
 
-    confirm = input("This will delete all plaintext files. Proceed? [y/N]: ")
-    if confirm.lower() != "y":
-        print("Operation cancelled by user.")
-        return
+    if confirm:
+        user_input = input("This will delete all plaintext files. Proceed? [y/N]: ")
+        if user_input.lower() != "y":
+            print("Operation cancelled by user.")
+            return
 
     open(PAUSE_FLAG, "w").close()
     print("[clear] Pause asked. Waiting watchers...")

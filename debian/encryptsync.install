@@ -1,0 +1,7 @@
+cli/* usr/lib/encryptsync/cli
+crypto/* usr/lib/encryptsync/crypto
+utils/* usr/lib/encryptsync/utils
+watcher/* usr/lib/encryptsync/watcher
+main.py usr/lib/encryptsync/
+encryptsyncctl.py usr/lib/encryptsync/
+config.template.yaml usr/lib/encryptsync/

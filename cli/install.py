@@ -15,12 +15,21 @@ def ask_mode():
 def get_paths(mode):
     python_bin = shutil.which("python3")
     venv_bin = os.path.dirname(python_bin) if "VIRTUAL_ENV" in os.environ else "/usr/bin"
-    if mode == "1":
+
+    if mode == "1":  # Dev
         project_path = Path(__file__).resolve().parent.parent
-    else:
-        project_path = Path("/opt/encryptsync")
+    else:  # System mode (deb or /opt install)
+        # Check if installed with .deb (standard debian path)
+        deb_path = Path("/usr/lib/encryptsync")
+        opt_path = Path("/opt/encryptsync")
+
+        if deb_path.exists():
+            project_path = deb_path
+        else:
+            project_path = opt_path  # fallback
+
     return {
-        "project": str(project_path),
+        "project_path": str(project_path),
         "python": python_bin,
         "venv_bin": venv_bin,
     }
@@ -54,7 +63,7 @@ def install_service(name, content):
 def install():
     mode = ask_mode()
     paths = get_paths(mode)
-    copy_project_if_needed(mode, paths["project"])
+    copy_project_if_needed(mode, paths["project_path"])
 
     if input("Install EncryptedSync daemon? [y/N]: ").lower() == "y":
         install_service("encryptsync", DAEMON_TEMPLATE.format(**paths))

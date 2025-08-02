@@ -1,6 +1,6 @@
 # 🔐 EncryptSync
 
-**EncryptSync** is a bidirectional GPG-based folder synchronization tool. It automatically encrypts/decrypts files between a plaintext folder and its secure, mirrored counterpart (e.g. synced via Syncthing, Nextcloud, etc.).
+**EncryptSync** is a bidirectional GPG-based folder synchronization tool. It automatically encrypts/decrypts files between a plaintext folder and its secure, mirrored counterpart \(e.g. synced via Syncthing, Nextcloud, etc.\).
 
 ---
 
@@ -17,7 +17,7 @@
 
 ## 🚀 Installation
 
-### ✅ Production install (recommended)
+### ✅ Production install \(recommended\)
 
 Installs globally via `pip install .`, makes `encryptsyncctl` available in your system path.
 
@@ -40,11 +40,11 @@ This lets you choose between:
 
 - Local installation  
 - Installation to `/opt/encryptsync`  
-- Setup of systemd services (watcher and clear-on-shutdown)
+- Setup of systemd services \(watcher and clear-on-shutdown\)
 
 ---
 
-### 🧪 Development install (venv)
+### 🧪 Development install \(venv\)
 
 Use this if you want to run or develop from source directly:
 
@@ -60,7 +60,7 @@ python encryptsyncctl.py install
 In this mode, you run the CLI using:
 
 ```bash
-python encryptsyncctl.py <command>
+python encryptsyncctl.py \<command\>
 ```
 
 ---
@@ -80,7 +80,7 @@ syncs:
 
 ---
 
-## 🔐 Usage (CLI)
+## 🔐 Usage \(CLI\)
 
 ### Encrypt a single file
 
@@ -138,10 +138,10 @@ encrypted/
 
 ## 🛠️ Systemd Services
 
-| Service               | Description                      |  
-|----------------------|----------------------------------|  
-| `encryptsync`       | Main daemon (real-time watcher) |  
-| `encryptsync-clear` | Clears plaintext at shutdown      |
+| Service               | Description                         |  
+|----------------------|-------------------------------------|  
+| `encryptsync`        | Main daemon \(real-time watcher\)   |  
+| `encryptsync-clear`  | Clears plaintext at shutdown        |
 
 You can inspect services:
 
@@ -152,16 +152,77 @@ journalctl -u encryptsync
 
 ---
 
+## 📦 Debian Packaging
+
+EncryptedSync can be packaged into a `.deb` file for easy distribution or installation across Debian-based systems.
+
+### 🛠️ Build Requirements
+
+```bash
+sudo apt install devscripts dh-python python3-all debhelper
+```
+
+### 🏗️ Build the `.deb` package
+
+Inside the root of the project directory:
+
+```bash
+debuild -us -uc
+```
+
+This will generate a file like:
+
+```
+../encryptsync\_0.1.0\_all.deb
+```
+
+### 📥 Install the package
+
+```bash
+sudo apt install ./encryptsync_0.1.0_all.deb
+```
+
+This automatically installs:
+
+- All Python and system dependencies \(as defined in `control`\)
+- Project files to `/usr/lib/encryptsync`
+- The CLI in `/usr/bin/encryptsyncctl`
+- A default config file in `/etc/encryptsync/config.yaml`
+
+### 📂 Packaging Files Overview \(debian/\)
+
+```
+debian/
+├── changelog
+├── compat
+├── control
+├── copyright
+├── encryptsync.install
+├── encryptsync.postinst
+├── encryptsync.prerm
+├── rules
+└── source/format
+```
+
+### 📝 Note for Developers
+
+- Do **not** place a `venv/` folder inside the project directory.  
+  For Debian packaging to work, virtual environments must stay **outside** the source tree.  
+- Never commit `.deb` files to Git.
+
+---
+
 ## 📁 Project Structure
 
 ```
 encryptsync/
-├── cli/               # Command-line tools
-├── crypto/            # GPG wrapper
-├── utils/             # Shared functions & config
-├── watcher/           # Watchdog observers
-├── scripts/           # Optional shell scripts
-├── tests/             # Optional tests
+├── cli/                # Command-line tools
+├── crypto/             # GPG wrapper
+├── debian/             # Debian packaging files
+├── utils/              # Shared functions & config
+├── watcher/            # Watchdog observers
+├── scripts/            # Optional shell scripts
+├── tests/              # Optional tests
 ├── encryptsyncctl.py   # CLI entrypoint
 ├── main.py             # Watcher runner
 ├── config.yaml         # User config
