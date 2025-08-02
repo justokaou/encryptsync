@@ -1,9 +1,10 @@
-encryptsync (0.1.4) UNRELEASED; urgency=medium
+encryptsync (0.1.5) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation (/etc/encryptsync/config.yaml).
   * Fix postinst to deploy default config properly.
   * Fix project path in cli install command
   * Fix user interaction in clear cli command for encryptsync-clear service
+  * Fix install error when using system mode with .deb by skipping redundant project copy to /usr/lib/encryptsync
 
- -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 15:02:00 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 15:29:18 +0200

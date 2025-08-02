@@ -36,6 +36,10 @@ def get_paths(mode):
 
 def copy_project_if_needed(mode, target_path):
     if mode == "2":
+        if target_path == "/usr/lib/encryptsync":
+            print("[install] Detected system install via .deb — skipping project copy.")
+            return
+
         if Path(target_path).exists():
             choice = input(f"[install] Project already exists at {target_path}. Overwrite? [y/N]: ").strip().lower()
             if choice == "y":
@@ -44,6 +48,7 @@ def copy_project_if_needed(mode, target_path):
             else:
                 print("[install] Skipping project copy.")
                 return
+
         print(f"[install] Copying project to {target_path}...")
         shutil.copytree(Path(__file__).resolve().parent.parent, target_path)
 
