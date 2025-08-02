@@ -4,6 +4,10 @@ import subprocess
 from pathlib import Path
 from cli.templates.daemon import DAEMON_TEMPLATE
 from cli.templates.clear import CLEAR_TEMPLATE
+from utils.system import is_systemd_available
+
+def is_deb_install():
+    return Path("/usr/lib/encryptsync").exists()
 
 def ask_mode(context="install"):
     print("Choose mode:")
@@ -35,6 +39,10 @@ def get_paths(mode):
     }
 
 def copy_default_config():
+    if not src.exists():
+        print("[install] ERROR: Default config.template.yaml missing in /usr/lib/encryptsync.")
+        return
+
     dst = Path("/etc/encryptsync/config.yaml")
     src = Path("/usr/lib/encryptsync/config.template.yaml")
     if not dst.exists() and src.exists():
@@ -61,6 +69,11 @@ def copy_project_if_needed(mode, target_path):
         shutil.copytree(Path(__file__).resolve().parent.parent, target_path)
 
 def install_service(name, content):
+    if not is_systemd_available():
+        print("[error] Systemd not detected. Service installation may fail.")
+        if input("Proceed anyway? [y/N]: ").strip().lower() != "y":
+            return
+    
     if os.geteuid() != 0:
         print("You must run this installer as root to install systemd services.")
         return
@@ -74,7 +87,11 @@ def install_service(name, content):
     print(f"[install] {name} service installed and started.")
 
 def install():
-    mode = ask_mode("install")
+    if is_deb_install():
+        mode = "2"
+    else:
+        mode = ask_mode("install")
+
     paths = get_paths(mode)
     copy_project_if_needed(mode, paths["project_path"])
 
