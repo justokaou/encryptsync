@@ -112,6 +112,12 @@ encryptsyncctl decrypt ~/Documents/encrypted/ --output ~/Restored/plain
 encryptsyncctl clear
 ```
 
+### Edit config.yaml
+
+```bash
+encryptsyncctl edit
+```
+
 ### Control systemd services
 
 ```bash
