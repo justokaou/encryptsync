@@ -18,21 +18,25 @@ def get_paths(mode):
 
     if mode == "1":  # Dev
         project_path = Path(__file__).resolve().parent.parent
-    else:  # System mode (deb or /opt install)
-        # Check if installed with .deb (standard debian path)
-        deb_path = Path("/usr/lib/encryptsync")
-        opt_path = Path("/opt/encryptsync")
-
-        if deb_path.exists():
-            project_path = deb_path
-        else:
-            project_path = opt_path  # fallback
+        config_path = project_path / "config.yaml"
+    else:  # System mode (deb or /opt)
+        project_path = Path("/usr/lib/encryptsync") if Path("/usr/lib/encryptsync").exists() else Path("/opt/encryptsync")
+        config_path = Path("/etc/encryptsync/config.yaml")
 
     return {
         "project_path": str(project_path),
         "python": python_bin,
         "venv_bin": venv_bin,
+        "config_path": str(config_path),
     }
+
+def copy_default_config():
+    dst = Path("/etc/encryptsync/config.yaml")
+    src = Path("/usr/lib/encryptsync/config.template.yaml")
+    if not dst.exists() and src.exists():
+        os.makedirs(dst.parent, exist_ok=True)
+        shutil.copy(src, dst)
+        print("[install] Default config copied to /etc/encryptsync/config.yaml")
 
 def copy_project_if_needed(mode, target_path):
     if mode == "2":
@@ -70,6 +74,9 @@ def install():
     paths = get_paths(mode)
     copy_project_if_needed(mode, paths["project_path"])
 
+    if mode == "2":
+        copy_default_config()
+
     if input("Install EncryptedSync daemon? [y/N]: ").lower() == "y":
         install_service("encryptsync", DAEMON_TEMPLATE.format(**paths))
 
@@ -77,3 +84,9 @@ def install():
         install_service("encryptsync-clear", CLEAR_TEMPLATE.format(**paths))
 
     print("Installation complete.")
+
+def edit():
+    mode = ask_mode()
+    paths = get_paths(mode)
+    editor = os.environ.get("EDITOR", "nano")
+    subprocess.run([editor, paths["config_path"]])

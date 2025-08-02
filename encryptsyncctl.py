@@ -7,7 +7,7 @@ from cli.encrypt import encrypt_path
 from cli.decrypt import decrypt_path
 from cli.clear import clear_plain
 from cli.service import systemctl_cmd
-from cli.install import install
+from cli.install import install, edit
 
 def main():
     parser = argparse.ArgumentParser(description="EncryptedSync control utility")
@@ -30,6 +30,8 @@ def main():
 
     _install = subparsers.add_parser("install", help="Install EncryptedSync and services")
 
+    _edit = subparsers.add_parser("edit", help="Edit configuration file")
+
     args = parser.parse_args()
     config = load_config()
 
@@ -41,6 +43,8 @@ def main():
         install()
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
+    elif args.command == "edit":
+        edit()
     elif args.command in {"start", "stop", "status"}:
         systemctl_cmd(args.command)
 
