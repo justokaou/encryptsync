@@ -1,4 +1,4 @@
-encryptsync (0.1.8) UNRELEASED; urgency=medium
+encryptsync (0.1.9) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation (/etc/encryptsync/config.yaml).
@@ -11,4 +11,4 @@ encryptsync (0.1.8) UNRELEASED; urgency=medium
   * Added support for controlling both main and clear systemd services via CLI, with color-coded status output.
   * Fix service status command to properly detect if the oneshot `encryptsync-clear` service is enabled for shutdown.
 
- -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 17:23:51 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Sat, 02 Aug 2025 17:35:34 +0200

@@ -5,10 +5,14 @@ from pathlib import Path
 from cli.templates.daemon import DAEMON_TEMPLATE
 from cli.templates.clear import CLEAR_TEMPLATE
 
-def ask_mode():
-    print("Install mode:")
+def ask_mode(context="install"):
+    print("Choose mode:")
     print("1) Development (current path)")
-    print("2) System (recommended: install to /opt/encryptsync)")
+    if context == "install":
+        print("2) System (recommended: install to /opt/encryptsync)")
+    else:
+        print("2) System (installed via .deb or /opt)")
+
     choice = input("Choice [1/2]? ").strip()
     return choice if choice in {"1", "2"} else "1"
 
@@ -70,12 +74,15 @@ def install_service(name, content):
     print(f"[install] {name} service installed and started.")
 
 def install():
-    mode = ask_mode()
+    mode = ask_mode("install")
     paths = get_paths(mode)
     copy_project_if_needed(mode, paths["project_path"])
 
     if mode == "2":
         copy_default_config()
+
+    if input("Edit config now? [y/N]: ").lower() == "y":
+        edit(paths)
 
     if input("Install EncryptedSync daemon? [y/N]: ").lower() == "y":
         install_service("encryptsync", DAEMON_TEMPLATE.format(**paths))
@@ -85,8 +92,12 @@ def install():
 
     print("Installation complete.")
 
-def edit():
-    mode = ask_mode()
-    paths = get_paths(mode)
+def edit(paths=None):
+    if paths is None:
+        mode = ask_mode()
+        paths = get_paths(mode)
+    if not Path(paths["config_path"]).exists():
+        print(f"[edit] Config file not found at {paths['config_path']}.")
+        return
     editor = os.environ.get("EDITOR", "nano")
     subprocess.run([editor, paths["config_path"]])
