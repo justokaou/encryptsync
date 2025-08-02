@@ -41,9 +41,9 @@ def get_paths(mode):
         "config_path": str(config_path),
     }
 
-def copy_default_config():
+def copy_default_config(project_path):
     dst = Path("/etc/encryptsync/config.yaml")
-    src = Path("/usr/lib/encryptsync/config.template.yaml")
+    src = Path(project_path) / "config.template.yaml"
 
     if dst.exists():
         print("[install] Config already exists. Skipping default copy.")
@@ -51,11 +51,10 @@ def copy_default_config():
     if not src.exists():
         print("[install] ERROR: Missing template config at", src)
         return
-    
-    if not dst.exists() and src.exists():
-        os.makedirs(dst.parent, exist_ok=True)
-        shutil.copy(src, dst)
-        print("[install] Default config copied to /etc/encryptsync/config.yaml")
+
+    os.makedirs(dst.parent, exist_ok=True)
+    shutil.copy(src, dst)
+    print(f"[install] Default config copied from {src} to {dst}.")
 
 def edit(paths=None):
     if paths is None:
@@ -124,7 +123,7 @@ def install():
     copy_project_if_needed(mode, paths["project_path"])
 
     if mode == "2":
-        copy_default_config()
+        copy_default_config(paths["project_path"])
 
     maybe_edit_config(paths)
 
