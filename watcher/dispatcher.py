@@ -1,4 +1,3 @@
-from watchdog.observers import Observer
 from watcher.handler import EncryptHandler, DecryptHandler
 
 def start_watcher(sync_config):

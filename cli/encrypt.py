@@ -4,6 +4,9 @@ from utils.cache import load_cache, save_cache
 from utils.file import is_valid_file
 from utils.lookup import find_matching_sync
 import os
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-cli")
 
 def encrypt_path(target_path, config, output_override=None):
     cache = load_cache()
@@ -11,7 +14,7 @@ def encrypt_path(target_path, config, output_override=None):
     sync = find_matching_sync(target_path, config, mode="encrypt")
 
     if not sync:
-        print("[encrypt] No matching config found for this path.")
+        logger.error("[encrypt] No matching config found for this path.")
         return
 
     base_dir = sync.plain_dir
@@ -35,7 +38,7 @@ def encrypt_path(target_path, config, output_override=None):
 
         # Skip only if hash is unchanged AND output file exists
         if cache.get(rel_path) == file_hash and os.path.exists(output_path):
-            print(f"[encrypt] Skipping unchanged: {rel_path}")
+            logger.info(f"[encrypt] Skipping unchanged: {rel_path}")
             continue
 
         try:
@@ -47,6 +50,6 @@ def encrypt_path(target_path, config, output_override=None):
             )
             cache[rel_path] = file_hash
         except Exception as e:
-            print(f"[encrypt] Failed to encrypt {f}: {e}")
+            logger.error(f"[encrypt] Failed to encrypt {f}: {e}")
 
     save_cache(cache)

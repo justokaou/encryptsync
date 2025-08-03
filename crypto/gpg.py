@@ -1,5 +1,8 @@
 import subprocess
 import os
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-gpg")
 
 def encrypt_file(input_path, output_dir, recipient, base_dir):
     # 1. Relative path of the input file from the base directory
@@ -23,7 +26,7 @@ def encrypt_file(input_path, output_dir, recipient, base_dir):
         input_path
     ]
     subprocess.run(cmd, check=True)
-    print(f"[encrypt] {input_path} > {output_path}")
+    logger.info(f"[encrypt] {input_path} > {output_path}")
 
 
 def decrypt_file(input_path, output_dir, base_dir):
@@ -45,7 +48,7 @@ def decrypt_file(input_path, output_dir, base_dir):
     result = subprocess.run(cmd, capture_output=True)
 
     if result.returncode == 0:
-        print(f"[decrypt] {input_path} > {output_path}")
+        logger.info(f"[decrypt] {input_path} > {output_path}")
     else:
-        print(f"[Error] Failed to decrypt {input_path}")
-        print(result.stderr.decode())
+        logger.error(f"[Error] Failed to decrypt {input_path}")
+        logger.error(result.stderr.decode())

@@ -1,5 +1,8 @@
 import os, time
 from filelock import FileLock, Timeout
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-clear")
 
 def clear_plain(config, confirm=True):
 
@@ -10,31 +13,31 @@ def clear_plain(config, confirm=True):
     if confirm:
         user_input = input("This will delete all plaintext files. Proceed? [y/N]: ")
         if user_input.lower() != "y":
-            print("Operation cancelled by user.")
+            logger.warning("[clear] Operation cancelled by user.")
             return
 
     open(PAUSE_FLAG, "w").close()
-    print("[clear] Pause asked. Waiting watchers...")
+    logger.info("[clear] Pause asked. Waiting watchers...")
 
     time.sleep(1)  # Optionnal : give time for watchers to pause
 
-    print(f"[clear] Acquiring lock: {LOCK_PATH}")
+    logger.info(f"[clear] Acquiring lock: {LOCK_PATH}")
     try:
         with LOCK:
-            print("[clear] Lock acquired. Deleting plaintext files.")
+            logger.info("[clear] Lock acquired. Deleting plaintext files.")
 
             for sync in config:
                 plain_dir = sync.plain_dir
-                print(f"[clear] Purging: {plain_dir}")
+                logger.info(f"[clear] Purging: {plain_dir}")
 
                 for root, dirs, files in os.walk(plain_dir, topdown=False):
                     for f in files:
                         path = os.path.join(root, f)
                         try:
                             os.remove(path)
-                            print(f"[clear] Deleted: {path}")
+                            logger.info(f"[clear] Deleted: {path}")
                         except Exception as e:
-                            print(f"[clear] Could not delete {path}: {e}")
+                            logger.error(f"[clear] Could not delete {path}: {e}")
 
                     for d in dirs:
                         dpath = os.path.join(root, d)
@@ -44,8 +47,8 @@ def clear_plain(config, confirm=True):
                             pass
 
     except Timeout:
-        print("[clear] Could not acquire lock.")
+        logger.error("[clear] Could not acquire lock.")
     finally:
         if os.path.exists(PAUSE_FLAG):
             os.remove(PAUSE_FLAG)
-            print("[clear] Watchers can resume.")
+            logger.info("[clear] Watchers can resume.")

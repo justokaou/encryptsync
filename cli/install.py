@@ -5,6 +5,9 @@ from pathlib import Path
 from cli.templates.daemon import DAEMON_TEMPLATE
 from cli.templates.clear import CLEAR_TEMPLATE
 from utils.system import is_systemd_available
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-cli")
 
 def is_deb_install():
     return Path("/usr/lib/encryptsync").exists()
@@ -46,22 +49,22 @@ def copy_default_config(project_path):
     src = Path(project_path) / "config.template.yaml"
 
     if dst.exists():
-        print("[install] Config already exists. Skipping default copy.")
+        logger.info("[install] Config already exists. Skipping default copy.")
         return
     if not src.exists():
-        print("[install] ERROR: Missing template config at", src)
+        logger.critical("[install] ERROR: Missing template config at", src)
         return
 
     os.makedirs(dst.parent, exist_ok=True)
     shutil.copy(src, dst)
-    print(f"[install] Default config copied from {src} to {dst}.")
+    logger.info(f"[install] Default config copied from {src} to {dst}.")
 
 def edit(paths=None):
     if paths is None:
         mode = ask_mode()
         paths = get_paths(mode)
     if not Path(paths["config_path"]).exists():
-        print(f"[edit] Config file not found at {paths['config_path']}.")
+        logger.critical(f"[edit] Config file not found at {paths['config_path']}.")
         return
     editor = os.environ.get("EDITOR", "nano")
     subprocess.run([editor, paths["config_path"]])
@@ -73,35 +76,35 @@ def maybe_edit_config(paths):
 def copy_project_if_needed(mode, target_path):
     if mode == "2":
         if target_path == "/usr/lib/encryptsync":
-            print("[install] Detected system install via .deb — skipping project copy.")
+            logger.info("[install] Detected system install via .deb — skipping project copy.")
             return
 
         if Path(target_path).exists():
             choice = input(f"[install] Project already exists at {target_path}. Overwrite? [y/N]: ").strip().lower()
             if choice == "y":
                 shutil.rmtree(target_path)
-                print(f"[install] Removed existing directory: {target_path}")
+                logger.info(f"[install] Removed existing directory: {target_path}")
             else:
-                print("[install] Skipping project copy.")
+                logger.info("[install] Skipping project copy.")
                 return
 
-        print(f"[install] Copying project to {target_path}...")
+        logger.info(f"[install] Copying project to {target_path}...")
         shutil.copytree(Path(__file__).resolve().parent.parent, target_path)
 
 def install_service(name, content):
     if not is_systemd_available():
-        print("[error] Systemd not detected. Service installation may fail.")
+        logger.warning("[error] Systemd not detected. Service installation may fail.")
         if input("Proceed anyway? [y/N]: ").strip().lower() != "y":
             return
     
     if os.geteuid() != 0:
-        print("You must run this installer as root to install systemd services.")
+        logger.warning("You must run this installer as root to install systemd services.")
         return
     
     log_dir = Path("/var/log/encryptsync")
     if not log_dir.exists():
         log_dir.mkdir(parents=True, exist_ok=True)
-        print("[install] Created log directory at /var/log/encryptsync")
+        logger.info("[install] Created log directory at /var/log/encryptsync")
 
     path = f"/etc/systemd/system/{name}.service"
     with open(path, "w") as f:
@@ -109,24 +112,24 @@ def install_service(name, content):
     subprocess.run(["systemctl", "daemon-reexec"], check=True)
     subprocess.run(["systemctl", "enable", name], check=True)
     subprocess.run(["systemctl", "start", name], check=True)
-    print(f"[install] {name} service installed and started.")
+    logger.info(f"[install] {name} service installed and started.")
 
 def maybe_install_service(name, template, paths, force=False):
     service_path = Path(f"/etc/systemd/system/{name}.service")
 
     if is_service_installed(name) and not force:
-        print(f"[install] {name}.service already installed. Skipping.")
+        logger.info(f"[install] {name}.service already installed. Skipping.")
         return
 
     if force:
-        print(f"[install] Forcing reinstallation of {name}.service...")
+        logger.info(f"[install] Forcing reinstallation of {name}.service...")
         if service_path.exists():
             service_path.unlink()
-            print(f"[install] Removed existing {name}.service before reinstalling.")
+            logger.info(f"[install] Removed existing {name}.service before reinstalling.")
     else:
         confirm = input(f"Install {name} service? [y/N]: ").lower()
         if confirm != "y":
-            print(f"[install] Skipping {name}.service.")
+            logger.info(f"[install] Skipping {name}.service.")
             return
 
     install_service(name, template.format(**paths))
@@ -148,4 +151,4 @@ def install(force=False):
     maybe_install_service("encryptsync", DAEMON_TEMPLATE, paths, force)
     maybe_install_service("encryptsync-clear", CLEAR_TEMPLATE, paths, force)
 
-    print("Installation complete.")
+    logger.info("Installation complete.")

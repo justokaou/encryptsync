@@ -1,4 +1,7 @@
 import subprocess
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-cli")
 
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -7,9 +10,9 @@ RESET = "\033[0m"
 def systemctl_cmd(action, service="encryptsync"):
     try:
         subprocess.run(["systemctl", action, f"{service}.service"], check=True)
-        print(f"[{action}] {service}.service {action}ed successfully.")
+        logger.info(f"[{action}] {service}.service {action}ed successfully.")
     except subprocess.CalledProcessError as e:
-        print(f"[{action}] Failed to {action} {service}.service: {e}")
+        logger.error(f"[{action}] Failed to {action} {service}.service: {e}")
 
 def print_service_enabled(service: str, label: str = None):
     label = label or service
@@ -22,7 +25,7 @@ def print_service_enabled(service: str, label: str = None):
     except subprocess.CalledProcessError:
         status = f"{RED}[disabled]{RESET}"
 
-    print(f"{label:<20}: {status}")
+    logger.info(f"{label:<20}: {status}")
 
 def print_service_status(service: str, label: str = None):
     label = label or service
@@ -34,7 +37,7 @@ def print_service_status(service: str, label: str = None):
         status = f"{GREEN}[ok]{RESET}"
     except subprocess.CalledProcessError:
         status = f"{RED}[down]{RESET}"
-    print(f"{label:<20}: {status}")
+    logger.info(f"{label:<20}: {status}")
 
 def status_cmd():
     print_service_status("encryptsync", "encryptsync daemon")

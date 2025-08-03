@@ -6,6 +6,9 @@ from utils.file import is_valid_file, is_forbidden_file
 from utils.recent import mark_recent_output, is_recent_output
 from filelock import FileLock, Timeout
 import os
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync.handler")
 
 LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))
 LOCK = FileLock(LOCK_PATH)
@@ -33,7 +36,7 @@ class EncryptHandler(FileSystemEventHandler):
             return
         
         if is_forbidden_file(event.src_path, self.config.plain_dir, "encrypt"):
-            print(f"[WARN] Skipping invalid file in plain_dir: {event.src_path}")
+            logger.warning(f"[WARN] Skipping invalid file in plain_dir: {event.src_path}")
             return
 
         rel_path = os.path.relpath(event.src_path, self.config.plain_dir)
@@ -56,7 +59,7 @@ class EncryptHandler(FileSystemEventHandler):
             self.cache[rel_path] = file_hash
             save_cache(self.cache)
         except Exception as e:
-            print(f"[Error] Failed to encrypt {event.src_path}: {e}")
+            logger.error(f"[Error] Failed to encrypt {event.src_path}: {e}")
         finally:
             self.processing.remove(rel_path)
 
@@ -68,7 +71,7 @@ class EncryptHandler(FileSystemEventHandler):
         encrypted_path = os.path.join(self.config.encrypted_dir, rel_path + ".gpg")
         if os.path.exists(encrypted_path):
             os.remove(encrypted_path)
-            print(f"[delete] {encrypted_path}")
+            logger.info(f"[delete] {encrypted_path}")
         self.cache.pop(rel_path, None)
         save_cache(self.cache)
 
@@ -82,7 +85,7 @@ class EncryptHandler(FileSystemEventHandler):
                         continue
 
                     if is_forbidden_file(full_path, self.config.plain_dir, "encrypt"):
-                        print(f"[WARN] Skipping invalid file in plain_dir during scan: {full_path}")
+                        logger.warning(f"[WARN] Skipping invalid file in plain_dir during scan: {full_path}")
                         continue
 
                     rel_path = os.path.relpath(full_path, self.config.plain_dir)
@@ -101,12 +104,12 @@ class EncryptHandler(FileSystemEventHandler):
                         )
                         self.cache[rel_path] = file_hash
                     except Exception as e:
-                        print(f"[Error] Failed to encrypt {full_path}: {e}")
+                        logger.error(f"[Error] Failed to encrypt {full_path}: {e}")
 
             save_cache(self.cache)
         finally:
             self.scanning = False
-            print("Scan completed for encryption handler.")
+            logger.info("Scan completed for encryption handler.")
 
 
 class DecryptHandler(FileSystemEventHandler):
@@ -127,7 +130,7 @@ class DecryptHandler(FileSystemEventHandler):
             return
         
         if is_forbidden_file(event.src_path, self.config.encrypted_dir, "decrypt"):
-            print(f"[WARN] Skipping invalid file in encrypted_dir: {event.src_path}")
+            logger.warning(f"[WARN] Skipping invalid file in encrypted_dir: {event.src_path}")
             return
         
         if is_recent_output(event.src_path):
@@ -156,7 +159,7 @@ class DecryptHandler(FileSystemEventHandler):
                 self.cache[rel_path] = file_hash
                 save_cache(self.cache)
         except Exception as e:
-            print(f"[Error] Failed to decrypt {event.src_path}: {e}")
+            logger.error(f"[Error] Failed to decrypt {event.src_path}: {e}")
         finally:
             self.processing.remove(rel_path)
 
@@ -168,7 +171,7 @@ class DecryptHandler(FileSystemEventHandler):
         plain_path = os.path.join(self.config.plain_dir, rel_path)
         if os.path.exists(plain_path):
             os.remove(plain_path)
-            print(f"[delete] {plain_path}")
+            logger.info(f"[delete] {plain_path}")
         self.cache.pop(rel_path, None)
         save_cache(self.cache)
 
@@ -202,9 +205,9 @@ class DecryptHandler(FileSystemEventHandler):
                             file_hash = file_sha256(plain_path)
                             self.cache[rel_path] = file_hash
                     except Exception as e:
-                        print(f"[Error] Failed to decrypt {full_path}: {e}")
+                        logger.error(f"[Error] Failed to decrypt {full_path}: {e}")
 
             save_cache(self.cache)
         finally:
             self.scanning = False
-            print("Scan completed for decryption handler.")
+            logger.info("Scan completed for decryption handler.")

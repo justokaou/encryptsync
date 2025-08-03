@@ -3,6 +3,9 @@ import time
 from utils.config import load_config
 from watcher.dispatcher import start_watcher
 from watchdog.observers import Observer
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync")
 
 def create_observers(handlers):
     observers = []
@@ -20,7 +23,7 @@ if __name__ == "__main__":
     for sync in syncs:
         for path in [sync.plain_dir, sync.encrypted_dir]:
             if not os.path.isdir(path):
-                print(f"[encryptsync] [ERROR] Directory does not exist: {path}")
+                logger.error(f"[encryptsync] [ERROR] Directory does not exist: {path}")
                 continue
         
         all_handlers += start_watcher(sync)
@@ -33,7 +36,7 @@ if __name__ == "__main__":
     try:
         while True:
             if os.path.exists(PAUSE_FLAG) and not paused:
-                print("[encryptsync] Pause asked : complete shutdown of observers")
+                logger.info("[encryptsync] Pause asked : complete shutdown of observers")
                 for obs in observers:
                     obs.stop()
                 for obs in observers:
@@ -42,7 +45,7 @@ if __name__ == "__main__":
                 paused = True
 
             elif not os.path.exists(PAUSE_FLAG) and paused:
-                print("[encryptsync] Restart : restarting observers")
+                logger.info("[encryptsync] Restart : restarting observers")
                 observers = create_observers(all_handlers)
                 paused = False
 

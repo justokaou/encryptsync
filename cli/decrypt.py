@@ -5,6 +5,9 @@ from crypto.gpg import decrypt_file
 from utils.hash import file_sha256
 from utils.file import is_valid_file
 from utils.lookup import find_matching_sync
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-cli")
 
 def decrypt_path(target_path, config, output_override=None):
     cache = load_cache()
@@ -12,7 +15,7 @@ def decrypt_path(target_path, config, output_override=None):
     sync = find_matching_sync(target_path, config, mode="decrypt")
 
     if not sync:
-        print("[decrypt] No matching config found for this path.")
+        logger.error("[decrypt] No matching config found for this path.")
         return
 
     base_dir = sync.encrypted_dir
@@ -35,7 +38,7 @@ def decrypt_path(target_path, config, output_override=None):
         if os.path.exists(output_path):
             output_hash = file_sha256(output_path)
             if cache.get(rel_path) == output_hash:
-                print(f"[decrypt] Skipping unchanged: {rel_path}")
+                logger.info(f"[decrypt] Skipping unchanged: {rel_path}")
                 continue
 
         try:
@@ -47,6 +50,6 @@ def decrypt_path(target_path, config, output_override=None):
             if os.path.exists(output_path):
                 cache[rel_path] = file_sha256(output_path)
         except Exception as e:
-            print(f"[decrypt] Failed to decrypt {f}: {e}")
+            logger.error(f"[decrypt] Failed to decrypt {f}: {e}")
 
     save_cache(cache)
