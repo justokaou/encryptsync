@@ -1,4 +1,4 @@
-encryptsync (0.1.20) UNRELEASED; urgency=medium
+encryptsync (0.1.21) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation
@@ -29,5 +29,7 @@ encryptsync (0.1.20) UNRELEASED; urgency=medium
   * Fixed duplicate log entries by centralizing logger usage across modules.
   * Added support for restarting systemd services via encryptsyncctl (`restart` command).
   * Fix rename encryptsync service from main to daemon
+  * Fixed duplicated log entries when running as a systemd service 
+    by disabling stdout redirection.
 
- -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 16:12:20 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 16:21:44 +0200

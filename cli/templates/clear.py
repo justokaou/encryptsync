@@ -8,7 +8,7 @@ Before=shutdown.target
 Type=oneshot
 WorkingDirectory={project_path}
 ExecStart={python} {project_path}/encryptsyncctl.py clear --yes
-StandardOutput=append:/var/log/encryptsync/encryptsync-clear.log
+StandardOutput=null
 StandardError=append:/var/log/encryptsync/encryptsync-clear.log
 Environment="PATH={venv_bin}:/usr/bin:/bin"
 
