@@ -8,7 +8,7 @@ RED = "\033[91m"
 RESET = "\033[0m"
 
 def systemctl_cmd(action, service="encryptsync"):
-    if action in {"start", "stop"} and os.geteuid() != 0:
+    if action in {"start", "stop", "restart"} and os.geteuid() != 0:
         logger.error(f"[{action}] You must run this command as root (or with sudo) to {action} a service.")
         return
     

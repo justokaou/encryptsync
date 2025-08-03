@@ -24,7 +24,7 @@ def main():
     clear = subparsers.add_parser("clear", help="Delete all plaintext files (with pause & lock)")
     clear.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
 
-    for cmd in ["start", "stop", "status"]:
+    for cmd in ["start", "stop", "restart", "status"]:
         p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service (sudo required for start/stop)")
         p.add_argument(
             "--service", choices=["daemon", "clear", "all"], default="main",
@@ -49,7 +49,7 @@ def main():
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
         edit()
-    elif args.command in {"start", "stop", "status"}:
+    elif args.command in {"start", "stop", "restart", "status"}:
         if args.command == "status":
             if args.service == "all":
                 status_cmd()
