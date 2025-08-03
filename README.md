@@ -1,6 +1,6 @@
 # 🔐 EncryptSync
 
-**EncryptSync** is a bidirectional GPG-based folder synchronization tool. It automatically encrypts and decrypts files between a plaintext folder and its secure mirrored counterpart (e.g. synced via Syncthing, Nextcloud, etc.)
+**EncryptSync** is a bidirectional folder sync tool powered by GPG. It automatically encrypts files from a local plaintext folder into an encrypted mirror — which you can then safely synchronize using tools like Syncthing or OwnCloud. Decryption works the same way in reverse, restoring files to their original location as needed.
 
 ---
 
@@ -12,6 +12,33 @@
 - ⚙️ Fully configurable via `config.yaml`  
 - 🧩 Modular CLI: `encrypt`, `decrypt`, `clear`, `install`, `start`, `stop`, `status`, etc.  
 - 💡 Systemd integration: run as a background service  
+
+---
+
+## ❓ Why EncryptSync?
+
+Cloud storage solutions like Nextcloud or OwnCloud offer basic encryption options — but they come with compromises. Server-side encryption means storing the keys on the same machine, reducing actual security. Full-disk encryption isn’t convenient for remote access.
+
+I wanted a reliable client-side encryption system that:
+
+- 🔒 Encrypts files *before* they’re synced  
+- 🔑 Lets me decrypt them automatically and on-demand  
+- 🛡️ Offers persistent protection even if the server is compromised  
+
+While tools like **VeraCrypt** exist, I’ve had reliability issues with corrupted containers in the past — especially when syncing large encrypted volumes. I also wanted something:
+
+- 🧩 Modular and transparent  
+- 🔐 Based on **GPG**, which I already use and trust  
+- 📁 Per-folder, supporting multiple keys if needed  
+- ⚙️ Integrated with **systemd** and my workflow  
+
+**EncryptSync** was born from that need: a simple, scriptable, and extensible way to mirror folders with GPG encryption. It offers:
+
+- 🟢 Live encryption/decryption with `watchdog`  
+- 🧹 Wiping plaintext at shutdown  
+- 🛠️ Automatic decryption at boot or login  
+
+Unlike VeraCrypt, which encrypts full volumes, EncryptSync takes a **granular** approach: per-file encryption, with optional key caching (via GPG agent). If your system is already secured (e.g. encrypted `/home`), you can skip passphrases — otherwise, **GPG** offers flexibility with smartcards and hardware tokens (even if I haven’t used those yet myself).
 
 ---
 
@@ -208,7 +235,8 @@ sudo apt install ./encryptsync_0.1.0_all.deb
 encryptsync/
 ├── cli/  
 ├── crypto/  
-├── debian/  
+├── debian/ 
+├── ressources/
 ├── utils/  
 ├── watcher/  
 ├── scripts/  

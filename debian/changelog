@@ -1,4 +1,4 @@
-encryptsync (0.1.23) UNRELEASED; urgency=medium
+encryptsync (0.1.25) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation
@@ -38,5 +38,6 @@ encryptsync (0.1.23) UNRELEASED; urgency=medium
     ~/.encryptsync/logs using RotatingFileHandler.
   * Fixed CLI help to properly display available subcommands 
     when no arguments are provided.
+  * Fixed check on-startup /home for encrypted system 
 
- -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 19:19:45 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 21:56:02 +0200
