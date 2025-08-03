@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import os, time
 import argparse
 from utils.config import load_config
 
@@ -55,13 +54,13 @@ def main():
                 status_cmd()
             else:
                 target = "encryptsync" 
-                if args.service == "main":
+                if args.service == "daemon":
                     print_service_status(target, target)
                 elif args.service == "clear":
                     target = "encryptsync-clear"
                     print_service_enabled(target, target)
         else:
-            target = "encryptsync" if args.service == "main" else "encryptsync-clear"
+            target = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
             systemctl_cmd(args.command, target)
 
 if __name__ == "__main__":
