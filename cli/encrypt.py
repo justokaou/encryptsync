@@ -46,7 +46,8 @@ def encrypt_path(target_path, config, output_override=None):
                 input_path=f,
                 output_dir=out_dir,
                 recipient=recipient,
-                base_dir=base_dir
+                base_dir=base_dir,
+                logger=logger
             )
             cache[rel_path] = file_hash
         except Exception as e:

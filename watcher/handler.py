@@ -54,7 +54,8 @@ class EncryptHandler(FileSystemEventHandler):
                 input_path=event.src_path,
                 output_dir=self.config.encrypted_dir,
                 recipient=self.config.recipient,
-                base_dir=self.config.plain_dir
+                base_dir=self.config.plain_dir,
+                logger=logger
             )
             self.cache[rel_path] = file_hash
             save_cache(self.cache)
@@ -100,7 +101,8 @@ class EncryptHandler(FileSystemEventHandler):
                             input_path=full_path,
                             output_dir=self.config.encrypted_dir,
                             recipient=self.config.recipient,
-                            base_dir=self.config.plain_dir
+                            base_dir=self.config.plain_dir,
+                            logger=logger
                         )
                         self.cache[rel_path] = file_hash
                     except Exception as e:
@@ -152,7 +154,8 @@ class DecryptHandler(FileSystemEventHandler):
             decrypt_file(
                 input_path=event.src_path,
                 output_dir=self.config.plain_dir,
-                base_dir=self.config.encrypted_dir
+                base_dir=self.config.encrypted_dir,
+                logger=logger
             )
             if os.path.exists(output_path):
                 file_hash = file_sha256(output_path)
@@ -199,7 +202,8 @@ class DecryptHandler(FileSystemEventHandler):
                         decrypt_file(
                             input_path=full_path,
                             output_dir=self.config.plain_dir,
-                            base_dir=self.config.encrypted_dir
+                            base_dir=self.config.encrypted_dir,
+                            logger=logger
                         )
                         if os.path.exists(plain_path):
                             file_hash = file_sha256(plain_path)

@@ -1,10 +1,7 @@
 import subprocess
 import os
-from utils.logger import get_logger
 
-logger = get_logger("encryptsync-gpg")
-
-def encrypt_file(input_path, output_dir, recipient, base_dir):
+def encrypt_file(input_path, output_dir, recipient, base_dir, logger):
     # 1. Relative path of the input file from the base directory
     rel_path = os.path.relpath(input_path, base_dir)
 
@@ -29,7 +26,7 @@ def encrypt_file(input_path, output_dir, recipient, base_dir):
     logger.info(f"[encrypt] {input_path} > {output_path}")
 
 
-def decrypt_file(input_path, output_dir, base_dir):
+def decrypt_file(input_path, output_dir, base_dir, logger):
     # Rebuild relative path
     rel_path = os.path.relpath(input_path, base_dir).replace(".gpg", "")
     output_path = os.path.join(output_dir, rel_path)

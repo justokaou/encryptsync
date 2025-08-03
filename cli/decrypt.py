@@ -1,5 +1,4 @@
 import os
-from utils.config import load_config
 from utils.cache import load_cache, save_cache
 from crypto.gpg import decrypt_file
 from utils.hash import file_sha256
@@ -45,7 +44,8 @@ def decrypt_path(target_path, config, output_override=None):
             decrypt_file(
                 input_path=f,
                 output_dir=out_dir,
-                base_dir=base_dir
+                base_dir=base_dir,
+                logger=logger
             )
             if os.path.exists(output_path):
                 cache[rel_path] = file_sha256(output_path)

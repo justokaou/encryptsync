@@ -130,6 +130,22 @@ encryptsyncctl status --service all
 
 ---
 
+## 📄 Logs
+
+EncryptedSync writes runtime logs to help with debugging and traceability.
+
+- 🛠️ **When run as a service**:
+  - `encryptsync.service` logs to `/var/log/encryptsync/encryptsync.log`
+  - `encryptsync-clear.service` logs to `/var/log/encryptsync/encryptsync-clear.log`
+
+- 🧪 **When run manually (CLI)**:
+  - Logs are written to your user directory:  
+    `~/.local/state/encryptsync/logs/encryptsync-cli.log`
+
+Each log contains timestamped messages for key events, errors, and operations performed.
+
+---
+
 ## 🖼️ Example
 
 📁 Folder sync layout:
