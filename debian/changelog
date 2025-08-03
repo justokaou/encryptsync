@@ -1,19 +1,31 @@
-encryptsync (0.1.15) UNRELEASED; urgency=medium
+encryptsync (0.1.18) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
-  * Update config loader to support system-wide installation (/etc/encryptsync/config.yaml).
+  * Update config loader to support system-wide installation
+    (/etc/encryptsync/config.yaml).
   * Fix postinst to deploy default config properly.
-  * Fix project path in cli install command
-  * Fix user interaction in clear cli command for encryptsync-clear service
-  * Fix install error when using system mode with .deb by skipping redundant project copy to /usr/lib/encryptsync
-  * Added `encryptsyncctl edit` command to open config.yaml in nano
-  * Auto-copy of config.template.yaml to /etc/encryptsync/config.yaml on first install
-  * Added support for controlling both main and clear systemd services via CLI, with color-coded status output.
-  * Fix service status command to properly detect if the oneshot `encryptsync-clear` service is enabled for shutdown.
-  * Add robust detection of systemd and OS to prevent invalid service setup on non-Linux systems.
-  * Add check to skip service installation if already present, and minor install script refactor.
-  * Fix default config copy to use dynamic project path instead of hardcoded /usr/lib/encryptsync/
-  * Add logging support for systemd services and implement `--force` option to reinstall them via the CLI.
-  * Add centralized logger with user/system-specific log path fallback and dual output (console + file).
+  * Fix project path in CLI install command.
+  * Fix user interaction in clear CLI command for encryptsync-clear service.
+  * Fix install error in system mode (.deb) by skipping project copy to
+    /usr/lib/encryptsync.
+  * Add `encryptsyncctl edit` command to open config.yaml in nano.
+  * Auto-copy config.template.yaml to /etc/encryptsync/config.yaml on first
+    install.
+  * Add CLI support to control both main and clear systemd services with
+    color-coded status output.
+  * Fix status command to detect if `encryptsync-clear` oneshot service is
+    enabled.
+  * Add detection of systemd and OS to prevent invalid service setup on
+    non-Linux systems.
+  * Skip service installation if already present and refactor install logic.
+  * Fix default config copy to use dynamic project path instead of hardcoded
+    /usr/lib/encryptsync.
+  * Add logging support for systemd services and implement `--force` CLI
+    reinstall option.
+  * Add centralized logger with fallback to user/system-specific log paths and
+    dual output (console + file).
+  * Enforce root permissions for systemd start/stop and fix logger inheritance
+    in gpg module. 
+  * Fixed duplicate log entries by centralizing logger usage across modules.
 
- -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 14:15:52 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 16:03:16 +0200

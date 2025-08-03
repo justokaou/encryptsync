@@ -14,7 +14,7 @@ def decrypt_path(target_path, config, output_override=None):
     sync = find_matching_sync(target_path, config, mode="decrypt")
 
     if not sync:
-        logger.error("[decrypt] No matching config found for this path.")
+        logger.error("[decrypt] No matching config found for this path. Make sure you are targeting the encrypted directory.")
         return
 
     base_dir = sync.encrypted_dir

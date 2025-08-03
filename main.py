@@ -1,11 +1,9 @@
 import os
 import time
 from utils.config import load_config
-from watcher.dispatcher import start_watcher
+from watcher.dispatcher import start_watchers
 from watchdog.observers import Observer
-from utils.logger import get_logger
-
-logger = get_logger("encryptsync")
+from utils.log import logger
 
 def create_observers(handlers):
     observers = []
@@ -20,13 +18,17 @@ if __name__ == "__main__":
     syncs = load_config()
     all_handlers = []
 
+    valid_syncs = []
     for sync in syncs:
         for path in [sync.plain_dir, sync.encrypted_dir]:
             if not os.path.isdir(path):
                 logger.error(f"[encryptsync] [ERROR] Directory does not exist: {path}")
-                continue
-        
-        all_handlers += start_watcher(sync)
+                break
+        else:
+            valid_syncs.append(sync)
+
+    all_handlers = start_watchers(valid_syncs)
+
 
     observers = create_observers(all_handlers)
 

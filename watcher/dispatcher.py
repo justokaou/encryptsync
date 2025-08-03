@@ -1,17 +1,30 @@
+from collections import defaultdict
 from watcher.handler import EncryptHandler, DecryptHandler
 
-def start_watcher(sync_config):
+def start_watchers(syncs):
     handlers = []
+    encrypt_paths = {}
+    decrypt_paths = {}
 
-    if sync_config.direction in ("encrypt-only", "both"):
-        plain_handler = EncryptHandler(sync_config)
-        plain_handler.scan_existing_files()
-        handlers.append((plain_handler, sync_config.plain_dir))
+    for sync in syncs:
+        # EncryptHandler for unique plain_dir
+        if sync.direction in ("encrypt-only", "both"):
+            if sync.plain_dir not in encrypt_paths:
+                encrypt_paths[sync.plain_dir] = sync
 
-    if sync_config.direction in ("decrypt-only", "both"):
-        decrypt_handler = DecryptHandler(sync_config)
-        decrypt_handler.scan_existing_files()
-        handlers.append((decrypt_handler, sync_config.encrypted_dir))
+        # DecryptHandler for unique encrypted_dir
+        if sync.direction in ("decrypt-only", "both"):
+            if sync.encrypted_dir not in decrypt_paths:
+                decrypt_paths[sync.encrypted_dir] = sync
+
+    for plain_dir, config in encrypt_paths.items():
+        handler = EncryptHandler(config)
+        handler.scan_existing_files()
+        handlers.append((handler, plain_dir))
+
+    for encrypted_dir, config in decrypt_paths.items():
+        handler = DecryptHandler(config)
+        handler.scan_existing_files()
+        handlers.append((handler, encrypted_dir))
 
     return handlers
-

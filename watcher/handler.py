@@ -6,9 +6,7 @@ from utils.file import is_valid_file, is_forbidden_file
 from utils.recent import mark_recent_output, is_recent_output
 from filelock import FileLock, Timeout
 import os
-from utils.logger import get_logger
-
-logger = get_logger("encryptsync.handler")
+from utils.log import logger
 
 LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))
 LOCK = FileLock(LOCK_PATH)

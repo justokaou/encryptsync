@@ -15,7 +15,7 @@ def is_deb_install():
 def is_service_installed(name):
     return Path(f"/etc/systemd/system/{name}.service").exists()
 
-def ask_mode(context="install"):
+def ask_mode(context=None):
     print("Choose mode:")
     print("1) Development (current path)")
     if context == "install":
