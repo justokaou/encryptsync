@@ -9,8 +9,8 @@ from cli.service import systemctl_cmd, status_cmd, print_service_status, print_s
 from cli.install import install, edit
 
 def main():
-    parser = argparse.ArgumentParser(description="EncryptedSync control utility")
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    parser = argparse.ArgumentParser(description="EncryptSync control utility")
+    subparsers = parser.add_subparsers(dest="command")
 
     enc = subparsers.add_parser("encrypt", help="Encrypt a file or directory")
     enc.add_argument("path", help="Path to file or directory to encrypt")
@@ -36,6 +36,9 @@ def main():
     _edit = subparsers.add_parser("edit", help="Edit configuration file")
 
     args = parser.parse_args()
+    if args.command is None:
+        parser.print_help()
+        exit(0)
     config = load_config()
 
     if args.command == "encrypt":
