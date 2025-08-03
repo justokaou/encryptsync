@@ -1,6 +1,7 @@
 import logging
 import sys, os
 from pathlib import Path
+from logging.handlers import RotatingFileHandler
 
 def get_log_path(name: str) -> str:
     if os.geteuid() == 0:
@@ -23,9 +24,11 @@ def get_logger(name: str) -> logging.Logger:
     # Create log dir if needed
     Path(log_path).parent.mkdir(parents=True, exist_ok=True)
 
-    # File handler
-    file_handler = logging.FileHandler(log_path, mode="a")
-    file_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+    # Log rotation only for user logs (~/.encryptsync)
+    if str(Path.home()) in log_path:
+        file_handler = RotatingFileHandler(log_path, maxBytes=5 * 1024 * 1024, backupCount=3)
+    else:
+        file_handler = logging.FileHandler(log_path, mode="a")
 
     # Stream handler (for stdout)
     stream_handler = logging.StreamHandler(sys.stdout)
