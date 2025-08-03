@@ -27,13 +27,16 @@ encryptsync (0.1.23) UNRELEASED; urgency=medium
   * Enforce root permissions for systemd start/stop and fix logger inheritance
     in gpg module. 
   * Fixed duplicate log entries by centralizing logger usage across modules.
-  * Added support for restarting systemd services via encryptsyncctl (`restart` command).
+  * Added support for restarting systemd services 
+    via encryptsyncctl (`restart` command).
   * Fix rename encryptsync service from main to daemon
   * Fixed duplicated log entries when running as a systemd service 
     by disabling stdout redirection.
-  * Added logrotate configuration and postrm script to uninstall project file with purge
+  * Added logrotate configuration and postrm script 
+    to uninstall project file with purge
   * Added automatic log rotation for user logs stored in 
     ~/.encryptsync/logs using RotatingFileHandler.
-  * Fixed CLI help to properly display available subcommands when no arguments are provided.
+  * Fixed CLI help to properly display available subcommands 
+    when no arguments are provided.
 
  -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 19:19:45 +0200
