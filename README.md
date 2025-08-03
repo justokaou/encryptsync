@@ -120,10 +120,10 @@ encryptsyncctl edit
 
 ### Control systemd services
 
-Start, stop, or check status for main or clear services:
+Start, stop, or check status for daemon or clear services:
 
 ```bash
-encryptsyncctl start --service main
+encryptsyncctl start --service daemon
 encryptsyncctl stop --service clear
 encryptsyncctl status --service all
 ```
@@ -232,7 +232,6 @@ debian/
 
 - Do **not** place a `venv/` folder inside the project directory.  
   For Debian packaging to work, virtual environments must stay **outside** the source tree.  
-- Never commit `.deb` files to Git.
 
 ---
 

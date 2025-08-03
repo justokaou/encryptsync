@@ -25,9 +25,9 @@ def main():
     clear.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
 
     for cmd in ["start", "stop", "status"]:
-        p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service")
+        p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service (sudo required for start/stop)")
         p.add_argument(
-            "--service", choices=["main", "clear", "all"], default="main",
+            "--service", choices=["daemon", "clear", "all"], default="main",
             help="Target service to control"
         )
 

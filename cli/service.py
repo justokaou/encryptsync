@@ -1,4 +1,4 @@
-import subprocess
+import subprocess, os
 from utils.logger import get_logger
 
 logger = get_logger("encryptsync-cli")
@@ -8,6 +8,10 @@ RED = "\033[91m"
 RESET = "\033[0m"
 
 def systemctl_cmd(action, service="encryptsync"):
+    if action in {"start", "stop"} and os.geteuid() != 0:
+        logger.error(f"[{action}] You must run this command as root (or with sudo) to {action} a service.")
+        return
+    
     try:
         subprocess.run(["systemctl", action, f"{service}.service"], check=True)
         logger.info(f"[{action}] {service}.service {action}ed successfully.")
