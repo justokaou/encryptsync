@@ -51,7 +51,7 @@ class EncryptHandler(FileSystemEventHandler):
             encrypt_file(
                 input_path=event.src_path,
                 output_dir=self.config.encrypted_dir,
-                recipient=self.config.recipient,
+                gpg_key=self.config.gpg_key,
                 base_dir=self.config.plain_dir,
                 logger=logger
             )
@@ -98,7 +98,7 @@ class EncryptHandler(FileSystemEventHandler):
                         encrypt_file(
                             input_path=full_path,
                             output_dir=self.config.encrypted_dir,
-                            recipient=self.config.recipient,
+                            gpg_key=self.config.gpg_key,
                             base_dir=self.config.plain_dir,
                             logger=logger
                         )

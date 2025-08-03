@@ -1,7 +1,7 @@
 import subprocess
 import os
 
-def encrypt_file(input_path, output_dir, recipient, base_dir, logger):
+def encrypt_file(input_path, output_dir, gpg_key, base_dir, logger):
     # 1. Relative path of the input file from the base directory
     rel_path = os.path.relpath(input_path, base_dir)
 
@@ -18,7 +18,7 @@ def encrypt_file(input_path, output_dir, recipient, base_dir, logger):
         "--batch",
         "--yes",
         "--encrypt",
-        "-r", recipient,
+        "-r", gpg_key,
         "-o", output_path,
         input_path
     ]

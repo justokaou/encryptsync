@@ -19,7 +19,7 @@ def encrypt_path(target_path, config, output_override=None):
 
     base_dir = sync.plain_dir
     out_dir = output_override or sync.encrypted_dir
-    recipient = sync.recipient
+    gpg_key = sync.gpg_key
 
     if os.path.isfile(target_path):
         files = [target_path]
@@ -45,7 +45,7 @@ def encrypt_path(target_path, config, output_override=None):
             encrypt_file(
                 input_path=f,
                 output_dir=out_dir,
-                recipient=recipient,
+                gpg_key=gpg_key,
                 base_dir=base_dir,
                 logger=logger
             )

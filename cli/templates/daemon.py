@@ -7,6 +7,7 @@ Wants=network.target
 [Service]
 Type=simple
 WorkingDirectory={project_path}
+ExecStartPre=/bin/bash -c 'while ! mountpoint -q /home; do sleep 5; done'
 ExecStart={python} {project_path}/main.py
 StandardOutput=null
 StandardError=append:/var/log/encryptsync/encryptsync.log
