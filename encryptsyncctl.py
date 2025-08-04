@@ -23,7 +23,7 @@ def main():
     clear = subparsers.add_parser("clear", help="Delete all plaintext files (with pause & lock)")
     clear.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
 
-    for cmd in ["start", "stop", "restart", "status"]:
+    for cmd in ["start", "stop", "restart", "status", "enable", "disable"]:
         p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service (sudo required for start/stop)")
         p.add_argument(
             "--service", choices=["daemon", "clear", "all"], default="main",
@@ -51,7 +51,7 @@ def main():
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
         edit()
-    elif args.command in {"start", "stop", "restart", "status"}:
+    elif args.command in {"start", "stop", "restart", "status", "enable", "disable"}:
         if args.command == "status":
             if args.service == "all":
                 status_cmd()
@@ -63,8 +63,16 @@ def main():
                     target = "encryptsync-clear"
                     print_service_enabled(target, target)
         else:
-            target = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
-            systemctl_cmd(args.command, target)
+            service_map = {
+                "daemon": ["encryptsync"],
+                "clear": ["encryptsync-clear"],
+                "all": ["encryptsync", "encryptsync-clear"]
+            }
+            targets = service_map.get(args.service, [])
+            
+            for target in targets:
+                systemctl_cmd(args.command, target)
+
 
 if __name__ == "__main__":
     main()

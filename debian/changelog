@@ -1,4 +1,4 @@
-encryptsync (0.1.25) UNRELEASED; urgency=medium
+encryptsync (0.1.26) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation
@@ -39,5 +39,6 @@ encryptsync (0.1.25) UNRELEASED; urgency=medium
   * Fixed CLI help to properly display available subcommands 
     when no arguments are provided.
   * Fixed check on-startup /home for encrypted system 
+  * Add enable/disable commands to manage systemd services via CLI
 
- -- JustOkaou <contact@justokaou.xyz>  Sun, 03 Aug 2025 21:56:02 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Mon, 04 Aug 2025 10:07:58 +0200

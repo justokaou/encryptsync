@@ -8,7 +8,7 @@ if [ "$1" = "purge" ]; then
     rm -rf /var/log/encryptsync
 
     # Delete config system (optionnal)
-    rm -f /etc/encryptsync/config.yaml
+    # rm -f /etc/encryptsync/config.yaml
 
     # Delete systemd services
     rm -f /etc/systemd/system/encryptsync.service
