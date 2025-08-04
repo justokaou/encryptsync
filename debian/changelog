@@ -6,8 +6,8 @@ encryptsync (0.1.0) stable; urgency=medium
   * Systemd services (daemon & clear on shutdown)
   * YAML configuration file with CLI edit support
   * Logging with logrotate, auto-detect config changes
-  * CLI utility: encrypt, decrypt, clear, install, edit, start/stop/status...
+  * CLI utility: encrypt, decrypt, clear, run, install, uninstall, edit, start/stop/status...
   * .deb packaging support for system install
   * Suitable for testing in real environments (pre-1.0 maturity)
 
- -- JustOkaou <contact@justokaou.xyz>  Mon, 04 Aug 2025 14:20:16 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Mon, 04 Aug 2025 22:33:16 +0200

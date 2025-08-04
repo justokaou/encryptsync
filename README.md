@@ -52,7 +52,7 @@ Download the latest `.deb` package from the [GitHub Releases page](https://githu
 sudo apt install ./encryptsync_0.1.0_all.deb
 ```
 
-This installs:
+This sets up :
 
 - All required files to `/usr/lib/encryptsync`  
 - The CLI as `encryptsyncctl` in `/usr/bin`  
@@ -69,7 +69,7 @@ or to force reinstall services :
 encryptsyncctl install -f
 ```
 
-This installs : 
+This sets up : 
 
 - Systemd services  
 - Default config at `/etc/encryptsync/config.yaml`
@@ -148,24 +148,51 @@ encryptsyncctl decrypt ~/Documents/encrypted/ --output ~/Restored/plain
 encryptsyncctl clear
 ```
 
-### Edit configuration
+### 📝 Edit configuration
 
-The `edit` command opens your configuration file in editor and **automatically restarts** the daemon service to apply changes.
+The `edit` command opens your configuration file in your default editor (e.g. `nano`) and **automatically restarts** the daemon service to apply changes.
+
 To skip the restart (e.g. when running as a non-root user), use the `--no-restart` flag — but note that **changes won’t take effect until the service is restarted**.
 
 ```bash
 encryptsyncctl edit
 ```
 
-### Control systemd services
+If you’re running in development mode and not using the `.deb` version, and need to run as root (to restart services), use:
+
+```bash
+sudo $(which python3) encryptsyncctl.py edit
+```
+
+---
+
+### 🛠️ Control systemd services
+
+You can control EncryptSync services manually via CLI:
 
 ```bash
 encryptsyncctl start --service daemon  
 encryptsyncctl stop --service clear  
-encryptsyncctl status --service all
+encryptsyncctl status --service all  
+encryptsyncctl enable --service all  
+encryptsyncctl disable --service all
 ```
 
-### Run manually (foreground mode)
+> ⚠️ These actions require root permissions.  
+> If you're in development mode, use:
+
+```bash
+sudo $(which python3) encryptsyncctl.py start --service daemon
+```
+
+Or, for any other service command (`stop`, `restart`, etc.), just replace the subcommand:
+
+```bash
+sudo $(which python3) encryptsyncctl.py stop --service all
+```
+
+
+### ▶️ Run manually (CLI foreground mode)
 
 To run the EncryptSync watcher manually (without systemd), use:
 
@@ -191,23 +218,41 @@ This is useful if you installed the .deb but prefer to run it interactively, or 
 
 ### 🔧 Uninstall EncryptSync services
 
-To remove installed **systemd services** (either from production `.deb` or development mode), use:
+To remove the installed **systemd services** (from either the `.deb` install or development mode), use :
 
-```
+```bash
 encryptsyncctl uninstall
 ```
 
 To skip confirmation prompts:
 
-```
+```bash
 encryptsyncctl uninstall --force
 ```
 
-> ⚠️ This only removes the **services**, not the full application.
+> ⚠️ This only removes the **services**, not the full application or its files.
 
-To completely uninstall EncryptSync **and remove all files and configuration**, use:
+#### 🔐 Root permissions required
 
+Stopping and disabling systemd services requires root access. If you're running EncryptSync in development mode (with a virtual environment), using `sudo python encryptsyncctl.py` **will not work**, because it bypasses your virtualenv.
+
+Instead, run:
+
+```bash
+sudo $(which python3) encryptsyncctl.py uninstall
 ```
+
+Or if you know the full path to your virtualenv Python:
+
+```bash
+sudo /path/to/venv/bin/python3 encryptsyncctl.py uninstall
+```
+
+#### 🧼 Full uninstall (production install)
+
+If EncryptSync was installed via `.deb`, you can remove everything — including services, binaries, and config — with:
+
+```bash
 sudo apt purge encryptsync
 ```
 
@@ -215,7 +260,7 @@ sudo apt purge encryptsync
 
 ## 📦 Version
 
-**This is version `0.1.0`** — the first stable release, but still undergoing testing across different environments and sync workflows.
+**This is version `0.1.0`** — the first stable release, currently undergoing testing across different environments and sync workflows.
 
 ⚠️ While core features are complete and reliable, feedback is welcome before releasing `v1.0.0`.
 
@@ -275,6 +320,16 @@ sudo apt install ./encryptsync_0.1.0_all.deb
 
 ---
 
+## 🧭 Portability
+
+EncryptSync is currently Linux-only and relies on systemd for background service management.
+
+Although its architecture is modular and cross-platform at the Python level, adapting it to other systems (such as Windows or macOS) would require alternative mechanisms to replicate service behavior.
+
+There are no immediate plans to support other platforms.
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -292,3 +347,12 @@ encryptsync/
 ├── config.template.yaml    # Example configuration (locate in /etc/encryptsync in .deb mode)
 └── requirements.txt        # Python dev dependencies
 ```
+
+---
+
+## 📫 Feedback
+
+This project is still under active testing.  
+If you encounter bugs or have suggestions, feel free to open an [issue on GitHub](https://github.com/justokaou/encryptsync/issues) or contact me directly.
+
+---

@@ -73,6 +73,10 @@ def install_service(name, content):
     logger.info(f"[install] {name} service installed and started.")
 
 def uninstall_service(name):
+    if os.geteuid() != 0:
+        logger.error(f"[uninstall] You must run this command as root (or with sudo) to remove services files.")
+        return
+
     subprocess.run(["systemctl", "disable", name], check=False)
     service_path = Path(f"/etc/systemd/system/{name}.service")
     if service_path.exists():
