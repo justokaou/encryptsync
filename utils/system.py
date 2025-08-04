@@ -1,7 +1,6 @@
 import shutil
 from pathlib import Path
 import platform
-import os
 
 def is_systemd_available():
     # Must be a Linux system

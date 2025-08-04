@@ -7,7 +7,8 @@ from cli.encrypt import encrypt_path
 from cli.decrypt import decrypt_path
 from cli.clear import clear_plain
 from cli.service import systemctl_cmd, status_cmd, print_service_status, print_service_enabled
-from cli.install import install, edit
+from cli.install import install
+from cli.edit import edit
 
 VERSION_FILE = pathlib.Path(__file__).resolve().parent / "version.txt"
 def get_version():

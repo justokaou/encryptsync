@@ -2,49 +2,20 @@ import os
 import shutil
 import subprocess
 from pathlib import Path
+
+from utils.hash import file_sha256
+from utils.logger import get_logger
+from utils.system import is_systemd_available
+
 from cli.templates.daemon import DAEMON_TEMPLATE
 from cli.templates.clear import CLEAR_TEMPLATE
-from utils.system import is_systemd_available
-from utils.logger import get_logger
-from cli.service import systemctl_cmd
-from utils.hash import file_sha256
+from cli.edit import edit
+
+from cli.utils.path import get_paths
+from cli.utils.system import is_deb_install, is_service_installed
+from cli.utils.mode import ask_mode
 
 logger = get_logger("encryptsync-cli")
-
-def is_deb_install():
-    return Path("/usr/lib/encryptsync").exists()
-
-def is_service_installed(name):
-    return Path(f"/etc/systemd/system/{name}.service").exists()
-
-def ask_mode(context=None):
-    print("Choose mode:")
-    print("1) Development (current path)")
-    if context == "install":
-        print("2) System (recommended: install to /opt/encryptsync)")
-    else:
-        print("2) System (installed via .deb or /opt)")
-
-    choice = input("Choice [1/2]? ").strip()
-    return choice if choice in {"1", "2"} else "1"
-
-def get_paths(mode):
-    python_bin = shutil.which("python3")
-    venv_bin = os.path.dirname(python_bin) if "VIRTUAL_ENV" in os.environ else "/usr/bin"
-
-    if mode == "1":  # Dev
-        project_path = Path(__file__).resolve().parent.parent
-        config_path = project_path / "config.yaml"
-    else:  # System mode (deb or /opt)
-        project_path = Path("/usr/lib/encryptsync") if Path("/usr/lib/encryptsync").exists() else Path("/opt/encryptsync")
-        config_path = Path("/etc/encryptsync/config.yaml")
-
-    return {
-        "project_path": str(project_path),
-        "python": python_bin,
-        "venv_bin": venv_bin,
-        "config_path": str(config_path),
-    }
 
 def copy_default_config(project_path):
     dst = Path("/etc/encryptsync/config.yaml")
@@ -60,27 +31,6 @@ def copy_default_config(project_path):
     os.makedirs(dst.parent, exist_ok=True)
     shutil.copy(src, dst)
     logger.info(f"[install] Default config copied from {src} to {dst}.")
-
-def edit(paths=None, context=None, restart=True):
-    if paths is None:
-        mode = ask_mode()
-        paths = get_paths(mode)
-    if not Path(paths["config_path"]).exists():
-        logger.critical(f"[edit] Config file not found at {paths['config_path']}.")
-        return
-    hash_before = file_sha256(paths["config_path"])
-    editor = os.environ.get("EDITOR", "nano")
-    subprocess.run([editor, paths["config_path"]])
-    hash_after = file_sha256(paths["config_path"])
-    if restart and context != "install":
-        if hash_before != hash_after and mode != "1":
-            logger.info(f"[edit] Config file edited at {paths['config_path']}. Restarting daemon service...")
-            systemctl_cmd("restart", "encryptsync")
-        elif mode == "1" and hash_before != hash_after:
-            logger.info(f"[edit] Config file at {paths['config_path']} edited. You need to restart the program.")
-        else:
-            logger.info(f"[edit] Config file at {paths['config_path']} has not changed. No restart needed.")
-
 
 def maybe_edit_config(paths):
     if input("Edit config now? [y/N]: ").lower() == "y":
