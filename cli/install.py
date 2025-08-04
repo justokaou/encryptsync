@@ -6,6 +6,7 @@ from cli.templates.daemon import DAEMON_TEMPLATE
 from cli.templates.clear import CLEAR_TEMPLATE
 from utils.system import is_systemd_available
 from utils.logger import get_logger
+from cli.service import systemctl_cmd
 
 logger = get_logger("encryptsync-cli")
 
@@ -59,7 +60,7 @@ def copy_default_config(project_path):
     shutil.copy(src, dst)
     logger.info(f"[install] Default config copied from {src} to {dst}.")
 
-def edit(paths=None):
+def edit(paths=None, context=None, restart=False):
     if paths is None:
         mode = ask_mode()
         paths = get_paths(mode)
@@ -68,10 +69,15 @@ def edit(paths=None):
         return
     editor = os.environ.get("EDITOR", "nano")
     subprocess.run([editor, paths["config_path"]])
+    if restart and context != "install":
+        logger.info(f"[edit] Config file edited at {paths['config_path']}. Restarting daemon service...")
+        systemctl_cmd("restart", "encryptsync")
+        logger.info("[edit] Daemon service restarted successfully.")
+
 
 def maybe_edit_config(paths):
     if input("Edit config now? [y/N]: ").lower() == "y":
-        edit(paths)
+        edit(paths, context="install")
 
 def copy_project_if_needed(mode, target_path):
     if mode == "2":

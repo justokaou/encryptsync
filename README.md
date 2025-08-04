@@ -150,6 +150,9 @@ encryptsyncctl clear
 
 ### Edit configuration
 
+The `edit` command opens your configuration file in editor and **automatically restarts** the daemon service to apply changes.
+To skip the restart (e.g. when running as a non-root user), use the `--no-restart` flag — but note that **changes won’t take effect until the service is restarted**.
+
 ```bash
 encryptsyncctl edit
 ```

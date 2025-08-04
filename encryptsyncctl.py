@@ -34,6 +34,7 @@ def main():
     _install.add_argument("--force", "-f" , action="store_true", help="Force reinstall services")
 
     _edit = subparsers.add_parser("edit", help="Edit configuration file")
+    _edit.add_argument("--no-restart", action="store_true", help="Do not restart the daemon after editing")
 
     args = parser.parse_args()
     if args.command is None:
@@ -50,7 +51,7 @@ def main():
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
-        edit()
+        edit(restart=args.no_restart)
     elif args.command in {"start", "stop", "restart", "status", "enable", "disable"}:
         if args.command == "status":
             if args.service == "all":
