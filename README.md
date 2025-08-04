@@ -256,6 +256,16 @@ If EncryptSync was installed via `.deb`, you can remove everything — including
 sudo apt purge encryptsync
 ```
 
+> 🛡️ **Privacy note:**  
+> The configuration file at `/etc/encryptsync/config.yaml` is preserved by default during uninstallation.  
+> It may contain paths or GPG key identifiers.  
+> You can delete it manually if needed:
+
+```bash
+sudo rm /etc/encryptsync/config.yaml
+```
+
+
 ---
 
 ## 📦 Version

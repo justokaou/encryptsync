@@ -2,22 +2,28 @@
 set -e
 
 if [ "$1" = "purge" ]; then
-    echo "[postrm] Purging EncryptedSync..."
+    echo "[postrm] Purging EncryptSync..."
 
-    # Delete log
+    # Stop and disable systemd services
+    systemctl stop encryptsync.service 2>/dev/null || true
+    systemctl stop encryptsync-clear.service 2>/dev/null || true
+    systemctl disable encryptsync.service 2>/dev/null || true
+    systemctl disable encryptsync-clear.service 2>/dev/null || true
+
+    # Delete logs
     rm -rf /var/log/encryptsync
 
-    # Delete config system (optionnal)
+    # Delete config system (optional)
     # rm -f /etc/encryptsync/config.yaml
 
-    # Delete systemd services
+    # Delete systemd service files
     rm -f /etc/systemd/system/encryptsync.service
     rm -f /etc/systemd/system/encryptsync-clear.service
 
-    # Delete project file
+    # Delete project files
     rm -rf /usr/lib/encryptsync
 
-    # Delete CLI program (if not deleted before)
+    # Delete CLI entry point
     [ -e /usr/bin/encryptsyncctl ] && rm -f /usr/bin/encryptsyncctl
 fi
 
