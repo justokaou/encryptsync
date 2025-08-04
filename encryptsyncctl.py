@@ -10,6 +10,7 @@ from cli.service import systemctl_cmd, status_cmd, print_service_status, print_s
 from cli.install import install
 from cli.edit import edit
 from cli.run import start_program
+from cli.uninstall import uninstall
 
 VERSION_FILE = pathlib.Path(__file__).resolve().parent / "version.txt"
 def get_version():
@@ -36,13 +37,13 @@ def main():
 
     for cmd in ["start", "stop", "restart", "status", "enable", "disable"]:
         p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service (sudo required for start/stop)")
-        p.add_argument(
-            "--service", choices=["daemon", "clear", "all"], default="main",
-            help="Target service to control"
-        )
+        p.add_argument("--service", "-s", choices=["daemon", "clear", "all"], default="main", help="Target service to control")
 
     _install = subparsers.add_parser("install", help="Install EncryptedSync and services")
     _install.add_argument("--force", "-f" , action="store_true", help="Force reinstall services")
+
+    _uninstall = subparsers.add_parser("uninstall", help="Uninstall EncryptSync and services")
+    _uninstall.add_argument("--force", "-f", action="store_true", help="Force uninstall without confirmation")
 
     _edit = subparsers.add_parser("edit", help="Edit configuration file")
     _edit.add_argument("--no-restart", action="store_true", help="Do not restart the daemon after editing")
@@ -65,6 +66,8 @@ def main():
         decrypt_path(args.path, config, output_override=args.output)
     elif args.command == "install":
         install(force=args.force)
+    elif args.command == "uninstall":
+        uninstall(force=args.force)
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":

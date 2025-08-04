@@ -1,5 +1,7 @@
 import subprocess, os
+from pathlib import Path
 from utils.logger import get_logger
+from utils.system import is_systemd_available
 
 logger = get_logger("encryptsync-cli")
 
@@ -46,3 +48,35 @@ def print_service_status(service: str, label: str = None):
 def status_cmd():
     print_service_status("encryptsync", "encryptsync daemon")
     print_service_enabled("encryptsync-clear", "encryptsync-clear")
+
+def install_service(name, content):
+    if not is_systemd_available():
+        logger.warning("[error] Systemd not detected. Service installation may fail.")
+        if input("Proceed anyway? [y/N]: ").strip().lower() != "y":
+            return
+    
+    if os.geteuid() != 0:
+        logger.warning("You must run this installer as root to install systemd services.")
+        return
+    
+    log_dir = Path("/var/log/encryptsync")
+    if not log_dir.exists():
+        log_dir.mkdir(parents=True, exist_ok=True)
+        logger.info("[install] Created log directory at /var/log/encryptsync")
+
+    path = f"/etc/systemd/system/{name}.service"
+    with open(path, "w") as f:
+        f.write(content)
+    subprocess.run(["systemctl", "daemon-reexec"], check=True)
+    subprocess.run(["systemctl", "enable", name], check=True)
+    subprocess.run(["systemctl", "start", name], check=True)
+    logger.info(f"[install] {name} service installed and started.")
+
+def uninstall_service(name):
+    subprocess.run(["systemctl", "disable", name], check=False)
+    service_path = Path(f"/etc/systemd/system/{name}.service")
+    if service_path.exists():
+        service_path.unlink()
+        logger.info(f"[uninstall] Removed {service_path}")
+    else:
+        logger.info(f"[uninstall] {name}.service not found. Skipping.")

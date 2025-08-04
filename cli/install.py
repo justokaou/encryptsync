@@ -1,15 +1,14 @@
 import os
 import shutil
-import subprocess
 from pathlib import Path
 
-from utils.hash import file_sha256
 from utils.logger import get_logger
-from utils.system import is_systemd_available
 
 from cli.templates.daemon import DAEMON_TEMPLATE
 from cli.templates.clear import CLEAR_TEMPLATE
+
 from cli.edit import edit
+from cli.service import install_service
 
 from cli.utils.path import get_paths
 from cli.utils.system import is_deb_install, is_service_installed
@@ -54,28 +53,7 @@ def copy_project_if_needed(mode, target_path):
         logger.info(f"[install] Copying project to {target_path}...")
         shutil.copytree(Path(__file__).resolve().parent.parent, target_path)
 
-def install_service(name, content):
-    if not is_systemd_available():
-        logger.warning("[error] Systemd not detected. Service installation may fail.")
-        if input("Proceed anyway? [y/N]: ").strip().lower() != "y":
-            return
-    
-    if os.geteuid() != 0:
-        logger.warning("You must run this installer as root to install systemd services.")
-        return
-    
-    log_dir = Path("/var/log/encryptsync")
-    if not log_dir.exists():
-        log_dir.mkdir(parents=True, exist_ok=True)
-        logger.info("[install] Created log directory at /var/log/encryptsync")
 
-    path = f"/etc/systemd/system/{name}.service"
-    with open(path, "w") as f:
-        f.write(content)
-    subprocess.run(["systemctl", "daemon-reexec"], check=True)
-    subprocess.run(["systemctl", "enable", name], check=True)
-    subprocess.run(["systemctl", "start", name], check=True)
-    logger.info(f"[install] {name} service installed and started.")
 
 def maybe_install_service(name, template, paths, force=False):
     service_path = Path(f"/etc/systemd/system/{name}.service")

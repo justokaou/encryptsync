@@ -10,7 +10,7 @@
 - 🔐 GPG-based encryption using a specified public key ID  
 - 🧹 Optional plaintext auto-wipe on shutdown  
 - ⚙️ Fully configurable via `config.yaml`  
-- 🧩 Modular CLI: `encrypt`, `decrypt`, `clear`, `install`, `run`, `start`, `stop`, `status`, etc.  
+- 🧩 Modular CLI: `encrypt`, `decrypt`, `clear`, `install`, `uninstall`, `run`, `start`, `stop`, `status`, etc.  
 - 💡 Systemd integration: run as a background service  
 
 ---
@@ -186,6 +186,30 @@ This is useful if you installed the .deb but prefer to run it interactively, or 
 
 - 🧪 **When run manually (CLI)**:  
   - `~/.local/state/encryptsync/logs/encryptsync-cli.log`
+
+---
+
+### 🔧 Uninstall EncryptSync services
+
+To remove installed **systemd services** (either from production `.deb` or development mode), use:
+
+```
+encryptsyncctl uninstall
+```
+
+To skip confirmation prompts:
+
+```
+encryptsyncctl uninstall --force
+```
+
+> ⚠️ This only removes the **services**, not the full application.
+
+To completely uninstall EncryptSync **and remove all files and configuration**, use:
+
+```
+sudo apt purge encryptsync
+```
 
 ---
 
