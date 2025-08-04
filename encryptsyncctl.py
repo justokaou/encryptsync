@@ -9,6 +9,7 @@ from cli.clear import clear_plain
 from cli.service import systemctl_cmd, status_cmd, print_service_status, print_service_enabled
 from cli.install import install
 from cli.edit import edit
+from cli.run import start_program
 
 VERSION_FILE = pathlib.Path(__file__).resolve().parent / "version.txt"
 def get_version():
@@ -45,6 +46,8 @@ def main():
 
     _edit = subparsers.add_parser("edit", help="Edit configuration file")
     _edit.add_argument("--no-restart", action="store_true", help="Do not restart the daemon after editing")
+
+    run = subparsers.add_parser("run", help="Run the EncryptSync daemon manually (CLI mode)")
 
     args = parser.parse_args()
     if args.version:
@@ -87,6 +90,8 @@ def main():
             
             for target in targets:
                 systemctl_cmd(args.command, target)
+    elif args.command == "run":
+        start_program()
 
 
 if __name__ == "__main__":

@@ -14,7 +14,7 @@ def create_observers(handlers):
         observers.append(obs)
     return observers
 
-if __name__ == "__main__":
+def run_watchers():
     syncs = load_config()
     all_handlers = []
 
@@ -58,3 +58,6 @@ if __name__ == "__main__":
             obs.stop()
         for obs in observers:
             obs.join()
+
+if __name__ == "__main__":
+    run_watchers()

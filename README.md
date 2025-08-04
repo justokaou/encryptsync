@@ -10,7 +10,7 @@
 - 🔐 GPG-based encryption using a specified public key ID  
 - 🧹 Optional plaintext auto-wipe on shutdown  
 - ⚙️ Fully configurable via `config.yaml`  
-- 🧩 Modular CLI: `encrypt`, `decrypt`, `clear`, `install`, `start`, `stop`, `status`, etc.  
+- 🧩 Modular CLI: `encrypt`, `decrypt`, `clear`, `install`, `run`, `start`, `stop`, `status`, etc.  
 - 💡 Systemd integration: run as a background service  
 
 ---
@@ -164,6 +164,17 @@ encryptsyncctl start --service daemon
 encryptsyncctl stop --service clear  
 encryptsyncctl status --service all
 ```
+
+### Run manually (foreground mode)
+
+To run the EncryptSync watcher manually (without systemd), use:
+
+```bash
+encryptsyncctl run
+```
+
+This is useful if you installed the .deb but prefer to run it interactively, or for testing purposes.
+⚠️ Make sure the systemd service encryptsync is not already running to avoid duplicate processes.
 
 ---
 
