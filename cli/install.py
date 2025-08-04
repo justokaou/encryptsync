@@ -7,6 +7,7 @@ from cli.templates.clear import CLEAR_TEMPLATE
 from utils.system import is_systemd_available
 from utils.logger import get_logger
 from cli.service import systemctl_cmd
+from utils.hash import file_sha256
 
 logger = get_logger("encryptsync-cli")
 
@@ -60,19 +61,25 @@ def copy_default_config(project_path):
     shutil.copy(src, dst)
     logger.info(f"[install] Default config copied from {src} to {dst}.")
 
-def edit(paths=None, context=None, restart=False):
+def edit(paths=None, context=None, restart=True):
     if paths is None:
         mode = ask_mode()
         paths = get_paths(mode)
     if not Path(paths["config_path"]).exists():
         logger.critical(f"[edit] Config file not found at {paths['config_path']}.")
         return
+    hash_before = file_sha256(paths["config_path"])
     editor = os.environ.get("EDITOR", "nano")
     subprocess.run([editor, paths["config_path"]])
+    hash_after = file_sha256(paths["config_path"])
     if restart and context != "install":
-        logger.info(f"[edit] Config file edited at {paths['config_path']}. Restarting daemon service...")
-        systemctl_cmd("restart", "encryptsync")
-        logger.info("[edit] Daemon service restarted successfully.")
+        if hash_before != hash_after and mode != "1":
+            logger.info(f"[edit] Config file edited at {paths['config_path']}. Restarting daemon service...")
+            systemctl_cmd("restart", "encryptsync")
+        elif mode == "1" and hash_before != hash_after:
+            logger.info(f"[edit] Config file at {paths['config_path']} edited. You need to restart the program.")
+        else:
+            logger.info(f"[edit] Config file at {paths['config_path']} has not changed. No restart needed.")
 
 
 def maybe_edit_config(paths):

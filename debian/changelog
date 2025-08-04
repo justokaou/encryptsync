@@ -1,4 +1,4 @@
-encryptsync (0.1.27) UNRELEASED; urgency=medium
+encryptsync (0.1.28) UNRELEASED; urgency=medium
 
   [ JustOkaou ]
   * Update config loader to support system-wide installation
@@ -41,5 +41,6 @@ encryptsync (0.1.27) UNRELEASED; urgency=medium
   * Fixed check on-startup /home for encrypted system 
   * Add enable/disable commands to manage systemd services via CLI
   * Add --no-restart flag in edit command
+  * Edit command restart only if config.yaml was modified.
 
- -- JustOkaou <contact@justokaou.xyz>  Mon, 04 Aug 2025 10:43:49 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Mon, 04 Aug 2025 11:44:25 +0200

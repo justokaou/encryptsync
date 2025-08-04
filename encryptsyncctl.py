@@ -51,7 +51,7 @@ def main():
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
-        edit(restart=args.no_restart)
+        edit(restart=not args.no_restart)
     elif args.command in {"start", "stop", "restart", "status", "enable", "disable"}:
         if args.command == "status":
             if args.service == "all":
