@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import pathlib
 from utils.config import load_config
 
 from cli.encrypt import encrypt_path
@@ -8,8 +9,16 @@ from cli.clear import clear_plain
 from cli.service import systemctl_cmd, status_cmd, print_service_status, print_service_enabled
 from cli.install import install, edit
 
+VERSION_FILE = pathlib.Path(__file__).resolve().parent / "version.txt"
+def get_version():
+    try:
+        return VERSION_FILE.read_text().strip()
+    except:
+        return "unknown"
+
 def main():
     parser = argparse.ArgumentParser(description="EncryptSync control utility")
+    parser.add_argument("--version", action="store_true", help="Show EncryptSync version")
     subparsers = parser.add_subparsers(dest="command")
 
     enc = subparsers.add_parser("encrypt", help="Encrypt a file or directory")
@@ -37,6 +46,10 @@ def main():
     _edit.add_argument("--no-restart", action="store_true", help="Do not restart the daemon after editing")
 
     args = parser.parse_args()
+    if args.version:
+        print(f"EncryptSync version {get_version()}")
+        exit(0)
+
     if args.command is None:
         parser.print_help()
         exit(0)

@@ -178,6 +178,14 @@ encryptsyncctl status --service all
 
 ---
 
+## 📦 Version
+
+**This is version `0.1.0`** — the first stable release, but still undergoing testing across different environments and sync workflows.
+
+⚠️ While core features are complete and reliable, feedback is welcome before releasing `v1.0.0`.
+
+---
+
 ## 🖼️ Example folder layout
 
 ```
@@ -236,16 +244,16 @@ sudo apt install ./encryptsync_0.1.0_all.deb
 
 ```
 encryptsync/
-├── cli/  
-├── crypto/  
-├── debian/ 
-├── ressources/
-├── utils/  
-├── watcher/  
-├── scripts/  
-├── tests/  
-├── encryptsyncctl.py  
-├── main.py  
-├── config.yaml  
-└── requirements.txt
+├── cli/                    # CLI commands: encrypt, decrypt, install, etc.
+├── crypto/                 # GPG-based encryption/decryption logic
+├── debian/                 # Debian packaging files
+├── ressources/             # Logrotate config for system logs (used by Debian)
+├── utils/                  # Utility functions: logger, hashing, config loader, etc.
+├── watcher/                # Watchdog-based real-time sync handlers
+├── scripts/                # Reserved for helper or maintenance scripts
+├── tests/                  # Placeholder for future unit/integration tests
+├── encryptsyncctl.py       # CLI entry point
+├── main.py                 # Main daemon launcher (runs watchers)
+├── config.template.yaml    # Example configuration (locate in /etc/encryptsync in .deb mode)
+└── requirements.txt        # Python dev dependencies
 ```
