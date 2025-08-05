@@ -52,52 +52,82 @@ Download the latest `.deb` package from the [GitHub Releases page](https://githu
 sudo apt install ./encryptsync_0.1.0_all.deb
 ```
 
-This sets up :
+This installs:
 
 - All required files to `/usr/lib/encryptsync`  
-- The CLI as `encryptsyncctl` in `/usr/bin`  
+- The CLI tool as `encryptsyncctl` in `/usr/bin`
 
-Then run the installer:
+Then run the service installer (with sudo add `sudo $(which python3)` before):
 
 ```bash
 encryptsyncctl install
 ```
 
-or to force reinstall services :
+This will install:
+
+- Systemd services for `encryptsync` and `encryptsync-clear`
+- The default config file at:
+  - `/etc/encryptsync/config.yaml` (system)
+
+Or for a **user-level install** (recommended if your GPG keys are in your session):
 
 ```bash
-encryptsyncctl install -f
+encryptsyncctl install --user
 ```
 
-This sets up : 
+Use `--user` if:
 
-- Systemd services  
-- Default config at `/etc/encryptsync/config.yaml`
+- You installed via the `.deb` but want **per-user systemd services**
+- Your **GPG keys are not accessible as root** (common with GPG agents)
 
-To check service status :
+This will install:
+
+- Systemd services for `encryptsync` and `encryptsync-clear`
+- The default config file at:
+  - `~/.config/encryptsync/config.yaml` (user)
+
+Check service status with:
 
 ```bash
 encryptsyncctl status --service all
 ```
 
+Or for user mode:
+
+```bash
+encryptsyncctl status --service all --user
+```
+
+> ⚠️ **Note**: The `.deb` package does *not* install or activate any systemd service automatically.  
+> You must run `encryptsyncctl install` to set them up.
+
 ---
 
-### 🧪 Development install (virtualenv)
+### 🧪 Development install (from repo)
 
 ```bash
 git clone https://github.com/justokaou/encryptsync.git
 cd encryptsync
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv encryptsync-venv
+source encryptsync-venv/bin/activate
 pip install -r requirements.txt
-python encryptsyncctl.py install
+python3 encryptsyncctl.py install --user
 ```
 
-Use the CLI with:
+By default, selecting option `2` during install will copy the project into:
+
+```
+~/opt/encryptsync
+```
+
+Use the CLI like:
 
 ```bash
-python encryptsyncctl.py <command>
+python3 encryptsyncctl.py status --service all --user
 ```
+
+> ℹ️ If your GPG key is available only in your **user session**, always use `--user` mode.  
+> System-wide services will not have access to your agent or smartcard in that case.
 
 ---
 
@@ -150,47 +180,67 @@ encryptsyncctl clear
 
 ### 📝 Edit configuration
 
-The `edit` command opens your configuration file in your default editor (e.g. `nano`) and **automatically restarts** the daemon service to apply changes.
-
-To skip the restart (e.g. when running as a non-root user), use the `--no-restart` flag — but note that **changes won’t take effect until the service is restarted**.
+The `edit` command opens your configuration file in `nano` and **automatically restarts** the daemon service to apply changes.
+To skip the restart, use the `--no-restart` flag — but note that **changes won’t take effect until the service is restarted**.
 
 ```bash
-encryptsyncctl edit
+encryptsyncctl edit --user
 ```
 
-If you’re running in development mode and not using the `.deb` version, and need to run as root (to restart services), use:
+> ℹ️ Always pass `--user` if you're managing EncryptSync as a user-level service  
+> (e.g. config in `~/.config/encryptsync/config.yaml`, services in `~/.config/systemd/user`).  
+> Without it, the tool assumes system-level usage, which requires root and expects GPG keys to be accessible by `root`.
+
+If you're in development mode and need to run as root (e.g. to restart system services), use:
 
 ```bash
 sudo $(which python3) encryptsyncctl.py edit
 ```
 
----
+> ❗ EncryptSync requires access to your GPG key.  
+> If the key is only available in your user session (via `gpg-agent`), using `--user` is **required**.
 
 ### 🛠️ Control systemd services
 
 You can control EncryptSync services manually via CLI:
 
 ```bash
-encryptsyncctl start --service daemon  
-encryptsyncctl stop --service clear  
-encryptsyncctl status --service all  
-encryptsyncctl enable --service all  
-encryptsyncctl disable --service all
+encryptsyncctl start --service daemon --user  
+encryptsyncctl stop --service clear --user  
+encryptsyncctl status --service all --user  
+encryptsyncctl enable --service all --user  
+encryptsyncctl disable --service all --user
 ```
 
-> ⚠️ These actions require root permissions.  
-> If you're in development mode, use:
+> ℹ️ Always pass `--user` when managing EncryptSync as a user-level service  
+> (e.g. if it was installed via `encryptsyncctl install --user`).  
+> This ensures services and configs under your user environment are correctly targeted.
+
+---
+
+If you're running in **system-wide mode** (installed via `.deb` and configured via `encryptsyncctl install` **as root**), use:
+
+```bash
+sudo encryptsyncctl start --service daemon
+```
+
+Or, for any other service command (`stop`, `restart`, etc.):
+
+```bash
+sudo encryptsyncctl stop --service all
+```
+
+---
+
+If you're in **development mode**, running from the repo with a virtual environment as root, use:
 
 ```bash
 sudo $(which python3) encryptsyncctl.py start --service daemon
 ```
 
-Or, for any other service command (`stop`, `restart`, etc.), just replace the subcommand:
-
-```bash
-sudo $(which python3) encryptsyncctl.py stop --service all
-```
-
+> ⚠️ If your GPG key is only available to your user session (via `gpg-agent`),  
+> the system-wide service **will not work** unless the key is accessible by `root`.  
+> In that case, prefer using the `--user` installation method.
 
 ### ▶️ Run manually (CLI foreground mode)
 
@@ -207,12 +257,19 @@ This is useful if you installed the .deb but prefer to run it interactively, or 
 
 ## 📄 Logs
 
-- 🛠️ **When run as a systemd service**:  
-  - `/var/log/encryptsync/encryptsync.log`  
+- 🛠️ **When run as a systemd service (root install)**:
+  - `/var/log/encryptsync/encryptsync.log`
   - `/var/log/encryptsync/encryptsync-clear.log`
 
-- 🧪 **When run manually (CLI)**:  
+- 👤 **When run as a user-level service (`--user`)**:
+  - `~/.local/state/encryptsync/encryptsync.log`
+  - `~/.local/state/encryptsync/encryptsync-clear.log`
+
+- 🧪 **When run manually (CLI foreground mode)**:
   - `~/.local/state/encryptsync/logs/encryptsync-cli.log`
+
+> ℹ️ The exact log path depends on the installation mode and service scope (`root` vs `--user`).  
+> In **user mode**, logs are stored in your home directory under `~/.local/state/encryptsync/`.
 
 ---
 
@@ -232,39 +289,45 @@ encryptsyncctl uninstall --force
 
 > ⚠️ This only removes the **services**, not the full application or its files.
 
-#### 🔐 Root permissions required
-
-Stopping and disabling systemd services requires root access. If you're running EncryptSync in development mode (with a virtual environment), using `sudo python encryptsyncctl.py` **will not work**, because it bypasses your virtualenv.
-
-Instead, run:
-
-```bash
-sudo $(which python3) encryptsyncctl.py uninstall
-```
-
-Or if you know the full path to your virtualenv Python:
-
-```bash
-sudo /path/to/venv/bin/python3 encryptsyncctl.py uninstall
-```
+---
 
 #### 🧼 Full uninstall (production install)
 
-If EncryptSync was installed via `.deb`, you can remove everything — including services, binaries, and config — with:
+If EncryptSync was installed via `.deb`, you can remove the core files and CLI with:
+
+> ⚠️ **Purge does not automatically remove user services.**  
+> To remove user services, run:
+
+```bash
+encryptsyncctl uninstall           # for system-wide install  
+encryptsyncctl uninstall --user   # for user install
+```
+
+Then :
 
 ```bash
 sudo apt purge encryptsync
 ```
 
+This removes:
+
+- CLI binary (`/usr/bin/encryptsyncctl`)
+- Core app files (`/usr/lib/encryptsync/`)
+
 > 🛡️ **Privacy note:**  
-> The configuration file at `/etc/encryptsync/config.yaml` is preserved by default during uninstallation.  
-> It may contain paths or GPG key identifiers.  
-> You can delete it manually if needed:
+> The configuration file is not deleted automatically. Depending on your setup, you may need to remove it manually:
+
+- For system-wide installs:
 
 ```bash
 sudo rm /etc/encryptsync/config.yaml
 ```
 
+- For user installs:
+
+```bash
+rm ~/.config/encryptsync/config.yaml
+```
 
 ---
 
@@ -290,15 +353,28 @@ encrypted/
 
 ## 🛠️ Systemd Services
 
+EncryptSync installs two Systemd units, available in both **system mode (root)** and **user mode** using the `--user` flag:
+
 | Service               | Description                      |  
 |----------------------|----------------------------------|  
 | `encryptsync`        | Main daemon (real-time watcher) |  
 | `encryptsync-clear`  | Clears plaintext at shutdown     |
 
+### 🔧 Check system-level services
+
 ```bash
 systemctl status encryptsync  
 journalctl -u encryptsync
 ```
+
+### 👤 Check user-level services
+
+```bash
+systemctl --user status encryptsync  
+journalctl --user -u encryptsync
+```
+
+> ℹ️ If you installed the services using `--user`, you must include the `--user` flag in all `systemctl` commands.
 
 ---
 

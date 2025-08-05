@@ -12,10 +12,10 @@ from cli.utils.mode import ask_mode
 
 logger = get_logger("encryptsync-cli")
 
-def edit(paths=None, context=None, restart=True):
+def edit(paths=None, context=None, restart=True, user=False):
     if paths is None:
         mode = ask_mode()
-        paths = get_paths(mode)
+        paths = get_paths(mode, user=user)
     if not Path(paths["config_path"]).exists():
         logger.critical(f"[edit] Config file not found at {paths['config_path']}.")
         return
