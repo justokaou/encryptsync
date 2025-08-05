@@ -1,4 +1,3 @@
-from collections import defaultdict
 from watcher.handler import EncryptHandler, DecryptHandler
 
 def start_watchers(syncs):

@@ -1,13 +1,15 @@
 import os, time
 from filelock import FileLock, Timeout
 from utils.logger import get_logger
+import tempfile
 
 logger = get_logger("encryptsync-clear")
 
 def clear_plain(config, confirm=True):
+    uid = os.getuid()
 
     PAUSE_FLAG = "/tmp/encryptsync.pause"
-    LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))
+    LOCK_PATH = os.path.join(tempfile.gettempdir(), f"encryptsync-{uid}.lock")
     LOCK = FileLock(LOCK_PATH, timeout=5)
 
     if confirm:

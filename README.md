@@ -257,19 +257,26 @@ This is useful if you installed the .deb but prefer to run it interactively, or 
 
 ## 📄 Logs
 
-- 🛠️ **When run as a systemd service (root install)**:
-  - `/var/log/encryptsync/encryptsync.log`
-  - `/var/log/encryptsync/encryptsync-clear.log`
+EncryptSync produces logs depending on how it is run:
 
-- 👤 **When run as a user-level service (`--user`)**:
-  - `~/.local/state/encryptsync/encryptsync.log`
-  - `~/.local/state/encryptsync/encryptsync-clear.log`
+- 🛠️ **System service (`root`)**  
+  - `/var/log/encryptsync/encryptsync.log` — main daemon service (`encryptsync`) or manual execution of `main.py  
+  - `/var/log/encryptsync/encryptsync-clear.log` — used by both the service (`encryptsync-clear`) and the `encryptsyncctl clear` command
 
-- 🧪 **When run manually (CLI foreground mode)**:
-  - `~/.local/state/encryptsync/logs/encryptsync-cli.log`
+- 🧪 **CLI tool as root (`encryptsyncctl`)**  
+  - `/var/log/encryptsync/encryptsync-cli.log` any direct CLI invocation as root like `encrypt`, `decrypt`, `status`, etc. (*except* `clear`, which uses its own log)
 
-> ℹ️ The exact log path depends on the installation mode and service scope (`root` vs `--user`).  
-> In **user mode**, logs are stored in your home directory under `~/.local/state/encryptsync/`.
+- 👤 **User-level service (`--user`)**  
+  - `~/.encryptsync/logs/encryptsync.log` — main daemon service or manual execution of `main.py`  
+  - `~/.encryptsync/logs/encryptsync-clear.log` — used by both the service and the `encryptsyncctl clear` command
+
+- 🧪 **CLI tool (`encryptsyncctl`)**  
+  - `~/.encryptsync/logs/encryptsync-cli.log` — any direct CLI invocation like `encrypt`, `decrypt`, `status`, etc. (*except* `clear`, which uses its own log)
+
+> ℹ️ The path used for logs depends on whether EncryptSync is run as a **system service**, a **user-level service**, or manually via CLI.  
+> In **user mode**, logs are stored under `~/.encryptsync/logs/`
+
+> ⚠️ The file `encryptsync-clear.log` is shared between the shutdown service (`encryptsync-clear.service`) and the `encryptsyncctl clear` command, regardless of install mode.
 
 ---
 

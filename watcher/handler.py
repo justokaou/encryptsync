@@ -7,8 +7,10 @@ from utils.recent import mark_recent_output, is_recent_output
 from filelock import FileLock, Timeout
 import os
 from utils.log import logger
+import tempfile
 
-LOCK_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".encryptsync.lock"))
+uid = os.getuid()
+LOCK_PATH = os.path.join(tempfile.gettempdir(), f"encryptsync-{uid}.lock")
 LOCK = FileLock(LOCK_PATH)
 
 def is_locked() -> bool:
