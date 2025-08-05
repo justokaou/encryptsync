@@ -5,4 +5,5 @@ watcher/* usr/lib/encryptsync/watcher
 main.py usr/lib/encryptsync/
 encryptsyncctl.py usr/lib/encryptsync/
 config.template.yaml usr/lib/encryptsync/
+version.txt /usr/lib/encryptsync/
 ressources/logrotate/encryptsync etc/logrotate.d/
