@@ -26,7 +26,7 @@ def edit(paths=None, context=None, restart=True, user=False):
     if restart and context != "install":
         if hash_before != hash_after and mode != "1":
             logger.info(f"[edit] Config file edited at {paths['config_path']}. Restarting daemon service...")
-            systemctl_cmd("restart", "encryptsync")
+            systemctl_cmd("restart", "encryptsync", user=user)
         elif mode == "1" and hash_before != hash_after:
             logger.info(f"[edit] Config file at {paths['config_path']} edited. You need to restart the program.")
         else:
