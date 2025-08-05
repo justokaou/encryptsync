@@ -333,7 +333,7 @@ sudo rm /etc/encryptsync/config.yaml
 - For user installs:
 
 ```bash
-rm ~/.config/encryptsync/config.yaml
+rm ~/.encryptsync/config/config.yaml
 ```
 
 ---

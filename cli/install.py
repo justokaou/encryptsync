@@ -80,10 +80,6 @@ def maybe_install_service(name, template, paths, force=False, user=False):
         if confirm != "y":
             logger.info(f"[install] Skipping {name}.service.")
             return
-
-    if user:
-        log_file = Path(paths["user_state_dir"]) / "encryptsync" / f"{name}.log"
-        log_file.parent.mkdir(parents=True, exist_ok=True)
     
     install_service(name, template.format(**paths), user=user)
 
