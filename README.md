@@ -117,7 +117,7 @@ python3 encryptsyncctl.py install --user
 By default, selecting option `2` during install will copy the project into:
 
 ```
-~/opt/encryptsync
+~/.encryptsync/code
 ```
 
 Use the CLI like:

@@ -1,10 +1,12 @@
 import yaml
 import os
+from pathlib import Path
 from utils.model import SyncConfig
 
 DEFAULT_CONFIG_PATHS = [
-    os.path.join(os.getcwd(), "config.yaml"),  # priorité dev (dans le projet)
-    "/etc/encryptsync/config.yaml"             # fallback prod
+    os.path.join(os.getcwd(), "config.yaml"),                            # priorité dev
+    os.path.join(Path.home(), ".encryptsync", "config.yaml"),           # user mode
+    "/etc/encryptsync/config.yaml"                                      # fallback prod
 ]
 
 def load_config(path=None) -> list[SyncConfig]:

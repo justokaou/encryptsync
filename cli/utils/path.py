@@ -18,7 +18,7 @@ def get_paths(mode, user=False):
         if mode == "1":
             project_path = Path(__file__).resolve().parent.parent.parent
         else:
-            project_path = Path("/usr/lib/encryptsync") if Path("/usr/lib/encryptsync").exists() else home / "opt/encryptsync"
+            project_path = Path("/usr/lib/encryptsync") if Path("/usr/lib/encryptsync").exists() else home / ".encryptsync" / "code"
 
     else:
         config_path = Path("/etc/encryptsync/config.yaml")
