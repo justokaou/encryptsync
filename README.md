@@ -49,7 +49,7 @@ Unlike VeraCrypt, which encrypts full volumes, EncryptSync takes a **granular** 
 Download the latest `.deb` package from the [GitHub Releases page](https://github.com/justokaou/encryptsync/releases).
 
 ```bash
-sudo apt install ./encryptsync_0.1.0_all.deb
+sudo apt install ./encryptsync_0.2.0_all.deb
 ```
 
 This installs:
@@ -84,7 +84,7 @@ This will install:
 
 - Systemd services for `encryptsync` and `encryptsync-clear`
 - The default config file at:
-  - `~/.config/encryptsync/config.yaml` (user)
+  - `~/.encryptsync/config.yaml` (user)
 
 Check service status with:
 
@@ -188,7 +188,7 @@ encryptsyncctl edit --user
 ```
 
 > ℹ️ Always pass `--user` if you're managing EncryptSync as a user-level service  
-> (e.g. config in `~/.config/encryptsync/config.yaml`, services in `~/.config/systemd/user`).  
+> (e.g. config in `~/.encryptsync/config.yaml`, services in `~/.config/systemd/user`).  
 > Without it, the tool assumes system-level usage, which requires root and expects GPG keys to be accessible by `root`.
 
 If you're in development mode and need to run as root (e.g. to restart system services), use:
@@ -260,7 +260,7 @@ This is useful if you installed the .deb but prefer to run it interactively, or 
 EncryptSync produces logs depending on how it is run:
 
 - 🛠️ **System service (`root`)**  
-  - `/var/log/encryptsync/encryptsync.log` — main daemon service (`encryptsync`) or manual execution of `main.py  
+  - `/var/log/encryptsync/encryptsync.log` — main daemon service (`encryptsync`) or manual execution of `main.py`  
   - `/var/log/encryptsync/encryptsync-clear.log` — used by both the service (`encryptsync-clear`) and the `encryptsyncctl clear` command
 
 - 🧪 **CLI tool as root (`encryptsyncctl`)**  
@@ -340,9 +340,10 @@ rm ~/.encryptsync/config/config.yaml
 
 ## 📦 Version
 
-**This is version `0.1.0`** — the first stable release, currently undergoing testing across different environments and sync workflows.
+**This is version 0.2.0** — a follow-up release adding full support for user-level systemd services (`--user`), improved logging structure, clearer file separation, and updated default paths.
 
-⚠️ While core features are complete and reliable, feedback is welcome before releasing `v1.0.0`.
+
+⚠️ EncryptSync is still under active testing. Core features are stable, but feedback is welcome before releasing `v1.0.0`.
 
 ---
 
@@ -402,13 +403,13 @@ debuild -us -uc
 This creates:
 
 ```
-../encryptsync_0.1.0_all.deb
+../encryptsync_0.2.0_all.deb
 ```
 
 ### Install it
 
 ```bash
-sudo apt install ./encryptsync_0.1.0_all.deb
+sudo apt install ./encryptsync_0.2.0_all.deb
 ```
 
 ---

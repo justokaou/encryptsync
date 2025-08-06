@@ -1,3 +1,20 @@
+encryptsync (0.2.0) UNRELEASED; urgency=medium
+
+  * Added support for user-level systemd services via `--user`
+    - Allows running services without root
+    - Recommended when GPG keys are in user session
+  * Updated `encryptsyncctl install` to support both system and user modes
+  * Config file now stored in `~/.encryptsync/config.yaml` for user mode
+  * Standardized file lock location to `/tmp/encryptsync-<uid>.lock`
+  * Added fallback install path to `~/.encryptsync/code`
+  * Cache file relocated to `~/.encryptsync/cache.json`
+  * Improved logger format: added timestamp to file logs
+  * Updated README 
+    and CLI help messages to reflect `--user` mode and config layout
+  * Internal refactors and bug fixes for consistency across install types 
+
+ -- JustOkaou <contact@justokaou.xyz>  Wed, 06 Aug 2025 14:00:26 +0200
+
 encryptsync (0.1.0) stable; urgency=medium
 
   * Initial stable release of EncryptSync
