@@ -30,9 +30,12 @@ def get_logger(name: str) -> logging.Logger:
     else:
         file_handler = logging.FileHandler(log_path, mode="a")
 
+    formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
+    file_handler.setFormatter(formatter)
+
     # Stream handler (for stdout)
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(logging.Formatter("%(asctime)s [%(levelname)s] %(message)s"))
+    stream_handler.setFormatter(formatter)
 
     logger.addHandler(file_handler)
     logger.addHandler(stream_handler)
