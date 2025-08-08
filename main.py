@@ -14,8 +14,13 @@ def create_observers(handlers):
         observers.append(obs)
     return observers
 
-def run_watchers():
-    syncs = load_config()
+def run_watchers(path=None):
+    
+    if path is None:
+        syncs = load_config()
+    else:
+        syncs = load_config(path)
+
     all_handlers = []
 
     valid_syncs = []
