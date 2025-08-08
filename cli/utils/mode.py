@@ -1,11 +1,7 @@
-def ask_mode(context=None):
+def ask_mode():
     print("Select environment mode:")
     print("1) Development (use local project and config in current folder)")
-
-    if context == "install":
-        print("2) System install (install code to /usr/lib or /opt, config to /etc or ~/.config)")
-    else:
-        print("2) System mode (use installed code from /usr/lib or /opt, config from /etc or ~/.config)")
+    print("2) System mode (use installed code from /usr/lib, config from /etc or ~/.encryptsync)")
 
     choice = input("Choice [1/2]? ").strip()
     return choice if choice in {"1", "2"} else "1"

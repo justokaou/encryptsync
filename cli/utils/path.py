@@ -13,26 +13,25 @@ def get_paths(mode, user=False):
 
     if user:
         config_path = home / ".encryptsync" / "config.yaml"
-        systemd_user_path = home / ".config/systemd/user"
-
-        if mode == "1":
-            project_path = Path(__file__).resolve().parent.parent.parent
-        else:
-            project_path = Path("/usr/lib/encryptsync") if Path("/usr/lib/encryptsync").exists() else home / ".encryptsync" / "code"
-
+        systemd_path = home / ".config/systemd/user"
+        project_path = (
+            Path(__file__).resolve().parent.parent.parent
+            if mode == "1"
+            else Path("/usr/lib/encryptsync")
+        )
     else:
         config_path = Path("/etc/encryptsync/config.yaml")
-        systemd_user_path = Path("/etc/systemd/system")
-
-        if mode == "1":
-            project_path = Path(__file__).resolve().parent.parent.parent
-        else:
-            project_path = Path("/usr/lib/encryptsync") if Path("/usr/lib/encryptsync").exists() else Path("/opt/encryptsync")
+        systemd_path = Path("/lib/systemd/system")  # standard Debian systemd unit dir
+        project_path = (
+            Path(__file__).resolve().parent.parent.parent
+            if mode == "1"
+            else Path("/usr/lib/encryptsync")
+        )
 
     return {
         "project_path": str(project_path),
         "python": python_bin,
         "venv_bin": venv_bin,
         "config_path": str(config_path),
-        "systemd_path": str(systemd_user_path),
+        "systemd_path": str(systemd_path),
     }

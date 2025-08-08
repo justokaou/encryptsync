@@ -10,7 +10,11 @@ from cli.service import systemctl_cmd, status_cmd, print_service_status, print_s
 from cli.install import install
 from cli.edit import edit
 from cli.run import start_program
-from cli.uninstall import uninstall
+# from cli.uninstall import uninstall
+from utils.system import is_systemd_available
+from utils.logger import get_logger
+
+logger = get_logger("encryptsync-cli")
 
 VERSION_FILE = pathlib.Path(__file__).resolve().parent / "version.txt"
 def get_version():
@@ -37,11 +41,10 @@ def main():
 
     for cmd in ["start", "stop", "restart", "status", "enable", "disable"]:
         p = subparsers.add_parser(cmd, help=f"{cmd.capitalize()} a systemd service (sudo required for start/stop)")
-        p.add_argument("--service", "-s", choices=["daemon", "clear", "all"], default="main", help="Target service to control")
-        p.add_argument("--user", action="store_true", help="Target user services instead of system-wide")
+        p.add_argument("--service", "-s", choices=["daemon", "clear", "all"], default="all", help="Target service to control")
+        p.add_argument("--user", action="store_true", help="Target user services instead of system-wide (no sudo needed)")
 
     _install = subparsers.add_parser("install", help="Install EncryptedSync and services")
-    _install.add_argument("--force", "-f" , action="store_true", help="Force reinstall services")
     _install.add_argument("--user", action="store_true", help="Install for user only (no root permissions)")
 
     _uninstall = subparsers.add_parser("uninstall", help="Uninstall EncryptSync and services")
@@ -62,16 +65,23 @@ def main():
     if args.command is None:
         parser.print_help()
         exit(0)
-    config = load_config()
+    
+    if args.command in {"encrypt", "decrypt", "clear"}:
+        config = load_config()
+    
+    if args.command in {"start","stop","restart","enable","disable","status","install"}:
+        if not is_systemd_available():
+            logger.error("systemd n'a pas été détecté. Ces commandes nécessitent systemd.")
+            exit(1)
 
     if args.command == "encrypt":
         encrypt_path(args.path, config, output_override=args.output)
     elif args.command == "decrypt":
         decrypt_path(args.path, config, output_override=args.output)
     elif args.command == "install":
-        install(force=args.force, user=args.user)
-    elif args.command == "uninstall":
-        uninstall(force=args.force, user=args.user)
+        install(user=args.user)
+    # elif args.command == "uninstall":
+        # uninstall(force=args.force, user=args.user)
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
@@ -81,12 +91,9 @@ def main():
             if args.service == "all":
                 status_cmd(user=args.user)
             else:
-                target = "encryptsync" 
-                if args.service == "daemon":
-                    print_service_status(target, target, user=args.user)
-                elif args.service == "clear":
-                    target = "encryptsync-clear"
-                    print_service_enabled(target, target, user=args.user)
+                target = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
+                print_service_status(target, target, user=args.user)
+                print_service_enabled(target, target, user=args.user)
         else:
             service_map = {
                 "daemon": ["encryptsync"],
@@ -95,8 +102,10 @@ def main():
             }
             targets = service_map.get(args.service, [])
             
+            ok = True
             for target in targets:
-                systemctl_cmd(args.command, target, user=args.user)
+                ok &= systemctl_cmd(args.command, target, user=args.user)
+            exit(0 if ok else 1)
     elif args.command == "run":
         start_program()
 

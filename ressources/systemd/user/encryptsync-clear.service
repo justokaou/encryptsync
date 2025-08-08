@@ -1,0 +1,19 @@
+[Unit]
+Description=EncryptedSync clear text files before logout
+After=default.target
+Conflicts=exit.target
+Before=exit.target
+
+[Service]
+Type=oneshot
+WorkingDirectory={project_path}
+RemainAfterExit=yes
+ExecStart=/usr/bin/true
+ExecStop={python} {project_path}/encryptsyncctl.py clear --yes
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH={venv_bin}:/usr/bin:/bin
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

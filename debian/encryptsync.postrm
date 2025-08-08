@@ -1,26 +1,31 @@
 #!/bin/sh
 set -e
 
+case "$1" in
+  remove|purge)
+    if command -v pam-auth-update >/dev/null 2>&1; then
+      pam-auth-update --package --remove encryptsync || true
+    fi
+  ;;
+esac
+
 if [ "$1" = "purge" ]; then
     echo "[postrm] Purging EncryptSync..."
 
-    # Delete logs
-    rm -rf /var/log/encryptsync
+    # Supprimer logs
+    rm -rf /var/log/encryptsync || true
 
-    # Delete config system (optional)
-    # rm -f /etc/encryptsync/config.yaml
+    # Delete system units
+    rm -f /lib/systemd/system/encryptsync.service
+    rm -f /lib/systemd/system/encryptsync-clear.service
 
-    # Delete systemd service files
-    rm -f /etc/systemd/system/encryptsync.service
-    rm -f /etc/systemd/system/encryptsync-clear.service
+    # Delete user units
+    rm -f /usr/lib/systemd/user/encryptsync.service
+    rm -f /usr/lib/systemd/user/encryptsync-clear.service
 
-    # Delete project files
-    rm -rf /usr/lib/encryptsync
-
-    # Delete CLI entry point
+    # Delete the encryptsyncctl symlink if it exists
     [ -e /usr/bin/encryptsyncctl ] && rm -f /usr/bin/encryptsyncctl
 fi
 
 #DEBHELPER#
-
 exit 0

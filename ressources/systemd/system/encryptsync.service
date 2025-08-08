@@ -1,0 +1,20 @@
+[Unit]
+Description=EncryptedSync daemon (system/root)
+After=network-online.target
+Wants=network-online.target
+# Attendre /home (si tu veux cibler un user précis, remplace /home par /home/oka)
+RequiresMountsFor=/home
+
+[Service]
+Type=exec
+WorkingDirectory=/usr/lib/encryptsync
+ExecStart=/usr/bin/python3 /usr/lib/encryptsync/main.py
+Restart=on-failure
+RestartSec=3
+StandardOutput=journal
+StandardError=journal
+Environment=PYTHONUNBUFFERED=1
+Environment=PATH=/usr/bin:/bin
+
+[Install]
+WantedBy=multi-user.target

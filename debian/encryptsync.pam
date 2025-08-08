@@ -1,0 +1,7 @@
+Name: EncryptSync session hooks
+Default: yes
+Priority: 256
+Session-Type: Additional
+Session:
+    optional pam_exec.so type=open  seteuid /usr/lib/encryptsync/scripts/pam/pam-session-open.sh
+    optional pam_exec.so type=close seteuid /usr/lib/encryptsync/scripts/pam/pam-session-close.sh

@@ -4,11 +4,19 @@ set -e
 ln -sf /usr/lib/encryptsync/encryptsyncctl.py /usr/bin/encryptsyncctl
 chmod +x /usr/lib/encryptsync/encryptsyncctl.py
 
-if [ ! -f /etc/encryptsync/config.yaml ]; then
-    mkdir -p /etc/encryptsync
-    cp /usr/lib/encryptsync/config.template.yaml /etc/encryptsync/config.yaml
-    echo "[postinst] Default config copied to /etc/encryptsync/config.yaml"
-fi
+case "$1" in
+  configure)
+    # scripts perms
+    install -m 0755 -d /usr/lib/encryptsync/scripts/pam
+    chmod 0755 /usr/lib/encryptsync/scripts/pam/pam-session-open.sh || true
+    chmod 0755 /usr/lib/encryptsync/scripts/pam/pam-session-close.sh || true
+
+    # activate pam snippet
+    if command -v pam-auth-update >/dev/null 2>&1; then
+      pam-auth-update --package --enable encryptsync || true
+    fi
+    ;;
+esac
 
 #DEBHELPER#
 
