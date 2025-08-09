@@ -10,7 +10,7 @@ from cli.service import systemctl_cmd, status_cmd, print_service_status, print_s
 from cli.install import install
 from cli.edit import edit
 from cli.run import start_program
-# from cli.uninstall import uninstall
+from cli.uninstall import uninstall
 from utils.system import is_systemd_available
 from utils.logger import get_logger
 
@@ -86,8 +86,8 @@ def main():
         decrypt_path(args.path, config, output_override=args.output)
     elif args.command == "install":
         install(user=_user_opt(args.user))
-    # elif args.command == "uninstall":
-        # uninstall(force=args.force, user=_user_opt(args.user))
+    elif args.command == "uninstall":
+        uninstall(force=args.force, user=_user_opt(args.user))
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
