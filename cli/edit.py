@@ -8,11 +8,15 @@ from utils.logger import get_logger
 from cli.service import systemctl_cmd
 
 from cli.utils.path import get_paths
-from cli.utils.mode import ask_mode
+from cli.utils.mode import ask_mode, auto_detect_user_mode, auto_detect_mode_for_run
 
 logger = get_logger("encryptsync-cli")
 
-def edit(paths=None, context=None, restart=True, user=False):
+def edit(paths=None, context=None, restart=True, user=None):
+
+    if user is None:
+        user = auto_detect_user_mode()
+
     if paths is None:
         mode = ask_mode()
         paths = get_paths(mode, user=user)

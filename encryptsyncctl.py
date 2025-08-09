@@ -28,6 +28,12 @@ def main():
     parser.add_argument("--version", action="store_true", help="Show EncryptSync version")
     subparsers = parser.add_subparsers(dest="command")
 
+    def _user_opt(flag: bool) -> bool | None:
+        # True  => force true (user mode)
+        # False => auto-detect (None)
+        return True if flag else None
+
+
     enc = subparsers.add_parser("encrypt", help="Encrypt a file or directory")
     enc.add_argument("path", help="Path to file or directory to encrypt")
     enc.add_argument("--output", "-o", help="Override output directory")
@@ -79,21 +85,23 @@ def main():
     elif args.command == "decrypt":
         decrypt_path(args.path, config, output_override=args.output)
     elif args.command == "install":
-        install(user=args.user)
+        install(user=_user_opt(args.user))
     # elif args.command == "uninstall":
-        # uninstall(force=args.force, user=args.user)
+        # uninstall(force=args.force, user=_user_opt(args.user))
     elif args.command == "clear":
         clear_plain(config, confirm=not args.yes)
     elif args.command == "edit":
-        edit(restart=not args.no_restart, user=args.user)
+        edit(restart=not args.no_restart, user=_user_opt(args.user))
     elif args.command in {"start", "stop", "restart", "status", "enable", "disable"}:
+        user_opt = _user_opt(args.user)
+        
         if args.command == "status":
             if args.service == "all":
-                status_cmd(user=args.user)
+                status_cmd(user=user_opt)
             else:
                 target = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
-                print_service_status(target, target, user=args.user)
-                print_service_enabled(target, target, user=args.user)
+                print_service_status(target, target, user=user_opt)
+                print_service_enabled(target, target, user=user_opt)
         else:
             service_map = {
                 "daemon": ["encryptsync"],
@@ -104,7 +112,7 @@ def main():
             
             ok = True
             for target in targets:
-                ok &= systemctl_cmd(args.command, target, user=args.user)
+                ok &= systemctl_cmd(args.command, target, user=user_opt)
             exit(0 if ok else 1)
     elif args.command == "run":
         start_program()
