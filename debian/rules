@@ -6,3 +6,4 @@ override_dh_fixperms:
 	dh_fixperms
 	chmod 644 debian/encryptsync/etc/logrotate.d/encryptsync
 	chmod 755 debian/encryptsync/etc/logrotate.d
+	chmod 0755 debian/encryptsync/usr/lib/encryptsync/scripts/pam/*.sh || true

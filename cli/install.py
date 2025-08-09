@@ -9,7 +9,7 @@ from cli.service import enable_services
 
 from cli.utils.path import get_paths
 from cli.utils.mode import auto_detect_user_mode
-from cli.utils.service import is_service_running
+from cli.utils.service import is_service_running, wait_active, is_service_enabled
 
 
 logger = get_logger("encryptsync-cli")
@@ -46,16 +46,23 @@ def install(user: bool | None = None):
     copy_default_config(paths["project_path"], paths["config_path"])
     maybe_edit_config(paths, user=effective_user)
 
+    # Reload des unités systemd
     if effective_user:
         subprocess.run(["systemctl", "--user", "daemon-reload"], check=False)
     else:
         subprocess.run(["systemctl", "daemon-reload"], check=False)
 
-    ok = enable_services(user=effective_user)
+    ok_actions = enable_services(user=effective_user)
 
-    if (is_service_running("encryptsync", user=effective_user)
-        and is_service_running("encryptsync-clear", user=effective_user)
-        and ok):
+    daemon_ok = wait_active("encryptsync", user=effective_user, timeout=15)
+
+    clear_ok = is_service_enabled("encryptsync-clear", user=effective_user)
+
+    if daemon_ok and clear_ok and ok_actions:
         logger.info("Installation complete.")
     else:
-        logger.error("Installation failed. Services are not running.")
+        logger.error(
+            "[install] Post-check failed: "
+            f"daemon_ok={daemon_ok}, clear_enabled={clear_ok}, actions_ok={ok_actions}"
+        )
+

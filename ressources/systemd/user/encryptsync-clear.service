@@ -9,7 +9,7 @@ Type=oneshot
 WorkingDirectory={project_path}
 RemainAfterExit=yes
 ExecStart=/usr/bin/true
-ExecStop={python} {project_path}/encryptsyncctl.py clear --yes
+ExecStop=/usr/bin/encryptsyncctl clear --yes
 Environment=PYTHONUNBUFFERED=1
 Environment=PATH={venv_bin}:/usr/bin:/bin
 StandardOutput=journal

@@ -1,20 +1,18 @@
 [Unit]
-Description=EncryptedSync - clear plaintext on system shutdown
+Description=EncryptedSync - clear plaintext on shutdown
 DefaultDependencies=no
 Before=shutdown.target
-Conflicts=shutdown.target
+After=local-fs.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=/usr/lib/encryptsync
-# Si tu effaces du clair dans /home/<user>, exécute en tant que ce user :
-ExecStart=/usr/bin/runuser -l <USER> -c '/usr/bin/python3 /usr/lib/encryptsync/encryptsyncctl.py clear --yes'
-TimeoutStartSec=180
+RemainAfterExit=yes
+ExecStart=/bin/true
+ExecStop=/usr/bin/encryptsyncctl clear --yes
+TimeoutStopSec=180
 StandardOutput=journal
 StandardError=journal
 Environment=PATH=/usr/bin:/bin
 
 [Install]
-WantedBy=halt.target
-WantedBy=poweroff.target
-WantedBy=reboot.target
+WantedBy=multi-user.target

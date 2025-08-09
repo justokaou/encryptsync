@@ -1,5 +1,24 @@
-encryptsync (0.2.0) UNRELEASED; urgency=medium
+encryptsync (0.3.0) UNRELEASED; urgency=medium
 
+  * Added full support for user-level systemd services with PAM integration
+    - Services start automatically on user login
+    - Services stop automatically on user logout
+  * Implemented automatic mode detection in all CLI commands
+    - Falls back to user or system mode if --user is omitted
+  * Updated `uninstall` command
+    - Removes configuration and log files for current mode
+    - Supports `--force` flag to skip confirmation prompts
+  * Updated `encryptsyncctl` commands (`install`, `edit`, `status`, etc.)
+    to consistently use shared mode detection logic
+  * Removed unused `systemd_path` from internal cli path resolution
+  * Updated README with simplified structure and `--help` usage examples
+  * Internal refactors and minor bug fixes for better stability
+
+ -- JustOkaou <contact@justokaou.xyz>  Sat, 09 Aug 2025 14:05:19 +0200
+
+encryptsync (0.2.0) stable; urgency=medium
+
+  [ JustOkaou ]
   * Added support for user-level systemd services via `--user`
     - Allows running services without root
     - Recommended when GPG keys are in user session

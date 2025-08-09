@@ -9,7 +9,7 @@ Type=oneshot
 WorkingDirectory=/usr/lib/encryptsync
 RemainAfterExit=yes
 ExecStart=/usr/bin/true
-ExecStop=/usr/bin/python3 /usr/lib/encryptsync/encryptsyncctl.py clear --yes
+ExecStop=/usr/bin/python3 /usr/lib/encryptsync/main.py
 Environment=PYTHONUNBUFFERED=1
 Environment=PATH=/usr/bin:/bin
 StandardOutput=journal

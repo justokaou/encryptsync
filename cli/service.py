@@ -58,8 +58,4 @@ def enable_services(user=None):
     for s in services:
         ok &= systemctl_cmd("enable", s, user=user)
         ok &= systemctl_cmd("start", s, user=user)
-    if is_service_running("encryptsync", user=user) and is_service_running("encryptsync-clear", user=user):
-        logger.info(f"[install] Services {'user' if user else 'system'} activated and started.")
-    else:
-        logger.error(f"[install] Services {'user' if user else 'system'} not started.")
     return ok
