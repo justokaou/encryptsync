@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-def get_paths(mode: str, user: bool = False):
+def get_paths(mode: str):
     python_bin = "/usr/bin/python3"
     venv_bin = os.path.dirname(python_bin) if "VIRTUAL_ENV" in os.environ else "/usr/bin"
     home = Path.home()
@@ -9,13 +9,8 @@ def get_paths(mode: str, user: bool = False):
     # Code path
     project_path = Path(__file__).resolve().parent.parent.parent if mode == "1" else Path("/usr/lib/encryptsync")
 
-    # Config & logs
-    if user:
-        config_path = home / ".encryptsync" / "config.yaml"
-        logs_path   = home / ".encryptsync" / "logs"
-    else:
-        config_path = Path("/etc/encryptsync/config.yaml")
-        logs_path   = Path("/var/log/encryptsync")
+    config_path = home / ".encryptsync" / "config.yaml"
+    logs_path   = home / ".encryptsync" / "logs"
 
     return {
         "project_path": str(project_path),
