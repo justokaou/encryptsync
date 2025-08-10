@@ -10,7 +10,7 @@ from cli.service import enable_services
 from cli.utils.path import get_paths
 from cli.utils.mode import auto_detect_user_mode
 from cli.utils.service import is_service_running, wait_active, is_service_enabled
-
+from cli.utils.system import current_session_id
 
 logger = get_logger("encryptsync-cli")
 
@@ -34,35 +34,30 @@ def maybe_edit_config(paths, user=False):
         edit(paths, context="install", user=user)
 
 def install(user: bool | None = None):
-    """
-    user = True  -> force user mode
-    user = False -> force system mode
-    user = None  -> auto-detect (XDG_RUNTIME_DIR && non-root => user, else system)
-    """
     effective_user = auto_detect_user_mode() if user is None else user
-
     paths = get_paths("2", user=effective_user)
 
     copy_default_config(paths["project_path"], paths["config_path"])
     maybe_edit_config(paths, user=effective_user)
 
-    # Reload des unités systemd
+    # reload
+    subprocess.run(["systemctl","--user" if effective_user else "", "daemon-reload"][0:2 if effective_user else 1], check=False)
+
     if effective_user:
-        subprocess.run(["systemctl", "--user", "daemon-reload"], check=False)
+        sid = current_session_id()
+        subprocess.run(["systemctl","--user","start", f"encryptsync@{sid}.service",
+                                                   f"encryptsync-clear@{sid}.service"], check=False)
+
+        daemon_ok = wait_active(f"encryptsync@{sid}", user=True, timeout=15)
+        clear_ok  = is_service_enabled("encryptsync-clear", user=True)
+        ok_actions = True
     else:
-        subprocess.run(["systemctl", "daemon-reload"], check=False)
+        ok_actions = enable_services(user=False)
+        daemon_ok = wait_active(f"encryptsync@{sid}", user=False, timeout=15)
+        clear_ok  = is_service_enabled(f"encryptsync-clear@{sid}", user=False)
 
-    ok_actions = enable_services(user=effective_user)
-
-    daemon_ok = wait_active("encryptsync", user=effective_user, timeout=15)
-
-    clear_ok = is_service_enabled("encryptsync-clear", user=effective_user)
-
-    if daemon_ok and clear_ok and ok_actions:
+    if daemon_ok and ok_actions:
         logger.info("Installation complete.")
     else:
-        logger.error(
-            "[install] Post-check failed: "
-            f"daemon_ok={daemon_ok}, clear_enabled={clear_ok}, actions_ok={ok_actions}"
-        )
+        logger.error("[install] Post-check failed")
 

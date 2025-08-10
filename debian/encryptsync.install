@@ -7,7 +7,7 @@ main.py usr/lib/encryptsync/
 encryptsyncctl.py usr/lib/encryptsync/
 config.template.yaml usr/lib/encryptsync/
 version.txt /usr/lib/encryptsync/
-ressources/logrotate/encryptsync etc/logrotate.d/
-ressources/systemd/system/* lib/systemd/system/
+
 ressources/systemd/user/* usr/lib/systemd/user/
-debian/encryptsync.pam  usr/share/pam-configs/encryptsync
+ressources/systemd/user-preset/90-encryptsync.preset usr/lib/systemd/user-preset/
+ressources/pam/encryptsync  usr/share/pam-configs/

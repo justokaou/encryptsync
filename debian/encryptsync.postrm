@@ -6,26 +6,8 @@ case "$1" in
     if command -v pam-auth-update >/dev/null 2>&1; then
       pam-auth-update --package --remove encryptsync || true
     fi
-  ;;
+    ;;
 esac
-
-if [ "$1" = "purge" ]; then
-    echo "[postrm] Purging EncryptSync..."
-
-    # Supprimer logs
-    rm -rf /var/log/encryptsync || true
-
-    # Delete system units
-    rm -f /lib/systemd/system/encryptsync.service
-    rm -f /lib/systemd/system/encryptsync-clear.service
-
-    # Delete user units
-    rm -f /usr/lib/systemd/user/encryptsync.service
-    rm -f /usr/lib/systemd/user/encryptsync-clear.service
-
-    # Delete the encryptsyncctl symlink if it exists
-    [ -e /usr/bin/encryptsyncctl ] && rm -f /usr/bin/encryptsyncctl
-fi
 
 #DEBHELPER#
 exit 0

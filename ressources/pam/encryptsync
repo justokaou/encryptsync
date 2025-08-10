@@ -1,0 +1,7 @@
+Name: EncryptSync session hooks
+Default: yes
+Priority: 256
+
+Session-Type: Additional
+Session:
+	optional	pam_exec.so	quiet	seteuid	/usr/lib/encryptsync/scripts/pam/pam-dispatch.sh

@@ -1,0 +1,10 @@
+[Unit]
+Description=Periodic EncryptSync queue sweep
+
+[Timer]
+OnBootSec=5s
+OnUnitActiveSec=5s
+Unit=encryptsync-dispatch.service
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=EncryptedSync daemon (user mode) per-session (%i)
+
+[Service]
+Type=exec
+WorkingDirectory=/usr/lib/encryptsync
+ExecStart=/usr/bin/python3 /usr/lib/encryptsync/main.py
+Restart=on-failure
+RestartSec=3
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal

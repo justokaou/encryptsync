@@ -13,6 +13,7 @@ from cli.run import start_program
 from cli.uninstall import uninstall
 from utils.system import is_systemd_available
 from utils.logger import get_logger
+from cli.utils.system import unit_name
 
 logger = get_logger("encryptsync-cli")
 
@@ -94,26 +95,27 @@ def main():
         edit(restart=not args.no_restart, user=_user_opt(args.user))
     elif args.command in {"start", "stop", "restart", "status", "enable", "disable"}:
         user_opt = _user_opt(args.user)
-        
+        is_user = bool(user_opt)
+
+        def targets_for(kind: str):
+            bases = {"daemon":["encryptsync"], "clear":["encryptsync-clear"], "all":["encryptsync","encryptsync-clear"]}[kind]
+            return [unit_name(b, user_scope=is_user) for b in bases]
+
         if args.command == "status":
             if args.service == "all":
-                status_cmd(user=user_opt)
+                for base in ["encryptsync","encryptsync-clear"]:
+                    print_service_status(base, unit_name(base, is_user), user=user_opt)
+                    print_service_enabled(base, unit_name(base, is_user), user=user_opt)
             else:
-                target = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
-                print_service_status(target, target, user=user_opt)
-                print_service_enabled(target, target, user=user_opt)
+                base = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
+                print_service_status(base, unit_name(base, is_user), user=user_opt)
+                print_service_enabled(base, unit_name(base, is_user), user=user_opt)
         else:
-            service_map = {
-                "daemon": ["encryptsync"],
-                "clear": ["encryptsync-clear"],
-                "all": ["encryptsync", "encryptsync-clear"]
-            }
-            targets = service_map.get(args.service, [])
-            
             ok = True
-            for target in targets:
-                ok &= systemctl_cmd(args.command, target, user=user_opt)
+            for tgt in targets_for(args.service):
+                ok &= systemctl_cmd(args.command, tgt, user=user_opt)
             exit(0 if ok else 1)
+
     elif args.command == "run":
         start_program()
 

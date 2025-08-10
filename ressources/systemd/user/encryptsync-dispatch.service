@@ -1,0 +1,6 @@
+[Unit]
+Description=Process EncryptSync session queue
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/encryptsync/scripts/dispatch.sh

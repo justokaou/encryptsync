@@ -1,0 +1,12 @@
+[Unit]
+Description=Watch EncryptSync session queue
+
+[Path]
+MakeDirectory=true
+DirectoryMode=0700
+PathExistsGlob=%t/encryptsync/open-*
+PathExistsGlob=%t/encryptsync/close-*
+Unit=encryptsync-dispatch.service
+
+[Install]
+WantedBy=default.target

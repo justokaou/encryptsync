@@ -1,8 +1,9 @@
 #!/bin/sh
 set -e
-
-rm -f /usr/bin/encryptsyncctl
-
+if [ "$1" = remove ]; then
+  if command -v pam-auth-update >/dev/null 2>&1; then
+    pam-auth-update --package --remove encryptsync || true
+  fi
+fi
 #DEBHELPER#
-
 exit 0

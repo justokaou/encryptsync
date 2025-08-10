@@ -4,6 +4,10 @@
 
 override_dh_fixperms:
 	dh_fixperms
-	chmod 644 debian/encryptsync/etc/logrotate.d/encryptsync
-	chmod 755 debian/encryptsync/etc/logrotate.d
+	chmod 0644 debian/encryptsync/etc/logrotate.d/encryptsync || true
 	chmod 0755 debian/encryptsync/usr/lib/encryptsync/scripts/pam/*.sh || true
+	chmod 0755 debian/encryptsync/usr/lib/encryptsync/dispatch.sh || true
+
+override_dh_installsystemd:
+	dh_installsystemd --no-enable --no-start
+

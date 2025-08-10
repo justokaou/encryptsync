@@ -1,0 +1,12 @@
+[Unit]
+Description=EncryptedSync - clear plaintext on logout per-session (%i)
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/true
+ExecStop=/usr/bin/encryptsyncctl clear --yes
+Environment=PYTHONUNBUFFERED=1
+StandardOutput=journal
+StandardError=journal
+TimeoutStopSec=180

@@ -6,12 +6,7 @@ chmod +x /usr/lib/encryptsync/encryptsyncctl.py
 
 case "$1" in
   configure)
-    # scripts perms
-    install -m 0755 -d /usr/lib/encryptsync/scripts/pam
-    chmod 0755 /usr/lib/encryptsync/scripts/pam/pam-session-open.sh || true
-    chmod 0755 /usr/lib/encryptsync/scripts/pam/pam-session-close.sh || true
 
-    # activate pam snippet
     if command -v pam-auth-update >/dev/null 2>&1; then
       pam-auth-update --package --enable encryptsync || true
     fi
@@ -19,5 +14,4 @@ case "$1" in
 esac
 
 #DEBHELPER#
-
 exit 0
