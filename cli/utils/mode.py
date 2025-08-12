@@ -1,11 +1,9 @@
 import os
 from pathlib import Path
 
-
 def auto_detect_mode_for_run() -> str:
     # if .deb code exist -> mode "2" (prod), else "1" (dev)
     return "2" if Path("/usr/lib/encryptsync").exists() else "1"
-
 
 def ask_mode():
     print("Select environment mode:")

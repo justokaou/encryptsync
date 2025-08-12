@@ -8,18 +8,15 @@ from utils.logger import get_logger
 from cli.service import systemctl_cmd
 
 from cli.utils.path import get_paths
-from cli.utils.mode import ask_mode, auto_detect_user_mode, auto_detect_mode_for_run
+from cli.utils.mode import ask_mode
 
 logger = get_logger("encryptsync-cli")
 
-def edit(paths=None, context=None, restart=True, user=None):
-
-    if user is None:
-        user = auto_detect_user_mode()
+def edit(paths=None, context=None, restart=True):
 
     if paths is None:
         mode = ask_mode()
-        paths = get_paths(mode, user=user)
+        paths = get_paths(mode)
     if not Path(paths["config_path"]).exists():
         logger.critical(f"[edit] Config file not found at {paths['config_path']}.")
         return
@@ -30,7 +27,7 @@ def edit(paths=None, context=None, restart=True, user=None):
     if restart and context != "install":
         if hash_before != hash_after and mode != "1":
             logger.info(f"[edit] Config file edited at {paths['config_path']}. Restarting daemon service...")
-            systemctl_cmd("restart", "encryptsync", user=user)
+            systemctl_cmd("restart", "encryptsync")
         elif mode == "1" and hash_before != hash_after:
             logger.info(f"[edit] Config file at {paths['config_path']} edited. You need to restart the program.")
         else:

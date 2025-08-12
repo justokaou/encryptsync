@@ -4,7 +4,6 @@ import shutil
 from pathlib import Path
 
 from utils.logger import get_logger
-from cli.utils.mode import auto_detect_user_mode
 from cli.utils.path import get_paths
 
 logger = get_logger("encryptsync-cli")
@@ -24,7 +23,7 @@ def _rm(path: Path):
         logger.error(f"[uninstall] Failed to remove {path}: {e}")
         return False
 
-def uninstall(user: bool | None = None, force: bool = False):
+def uninstall(force: bool = False):
     """
     Remove EncryptSync configuration and logs.
     - user=True  : target user file path (~/.encryptsync/*)
@@ -32,15 +31,11 @@ def uninstall(user: bool | None = None, force: bool = False):
     - user=None  : auto-detect (user if XDG_RUNTIME_DIR and non-root, else system)
     - force=True : no interaction mode
     """
-    effective_user = auto_detect_user_mode() if user is None else user
 
-    paths = get_paths(mode="2", user=effective_user)
+    paths = get_paths(mode="2")
     config_path = Path(paths["config_path"])
 
-    if effective_user:
-        logs_dir = Path.home() / ".encryptsync" / "logs"
-    else:
-        logs_dir = Path("/var/log/encryptsync")
+    logs_dir = Path.home() / ".encryptsync" / "logs"
 
     targets = [config_path, logs_dir]
 
@@ -56,10 +51,6 @@ def uninstall(user: bool | None = None, force: bool = False):
         if ans != "y":
             logger.info("[uninstall] Aborted by user.")
             return
-
-    if not effective_user and os.geteuid() != 0:
-        logger.error("[uninstall] You must run this command as root to remove system-wide files.")
-        return
 
     ok = True
     for t in targets:
