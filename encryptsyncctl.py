@@ -33,11 +33,9 @@ def main():
 
     enc = subparsers.add_parser("encrypt", help="Encrypt a file or directory")
     enc.add_argument("path", help="Path to file or directory to encrypt")
-    enc.add_argument("--output", "-o", help="Override output directory")
 
     dec = subparsers.add_parser("decrypt", help="Decrypt a file or directory")
     dec.add_argument("path", help="Path to file or directory to decrypt")
-    dec.add_argument("--output", "-o", help="Override output directory")
 
     clear = subparsers.add_parser("clear", help="Delete all plaintext files (with pause & lock)")
     clear.add_argument("--yes", "-y", action="store_true", help="Skip confirmation prompt")
@@ -75,10 +73,10 @@ def main():
             raise SystemExit(1)
 
     if args.command == "encrypt":
-        encrypt_path(args.path, config, output_override=args.output)
+        encrypt_path(args.path, config)
 
     elif args.command == "decrypt":
-        decrypt_path(args.path, config, output_override=args.output)
+        decrypt_path(args.path, config)
 
     elif args.command == "install":
         install()

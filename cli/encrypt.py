@@ -8,7 +8,7 @@ from utils.logger import get_logger
 
 logger = get_logger("encryptsync-cli")
 
-def encrypt_path(target_path, config, output_override=None):
+def encrypt_path(target_path, config):
     cache = load_cache()
     target_path = os.path.abspath(target_path)
     sync = find_matching_sync(target_path, config, mode="encrypt")
@@ -18,7 +18,7 @@ def encrypt_path(target_path, config, output_override=None):
         return
 
     base_dir = sync.plain_dir
-    out_dir = output_override or sync.encrypted_dir
+    out_dir = sync.encrypted_dir
     gpg_key = sync.gpg_key
 
     if os.path.isfile(target_path):
