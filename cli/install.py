@@ -8,7 +8,7 @@ from pathlib import Path
 from utils.logger import get_logger
 from cli.edit import edit
 from cli.utils.path import get_paths
-from cli.utils.service import wait_active
+from cli.utils.service import wait_unit_active
 from cli.utils.system import current_session_id
 
 logger = get_logger("encryptsync-cli")
@@ -50,7 +50,7 @@ def self_test_user_mode() -> bool:
     # open -> start
     (qdir / f"open-{sid}").touch()
     subprocess.run(["systemctl", "--user", "start", "encryptsync-dispatch.service"], check=False)
-    started = wait_active(f"encryptsync@{sid}", timeout=10)
+    started = wait_unit_active(f"encryptsync@{sid}.service", timeout=10)
 
     # close -> stop
     (qdir / f"close-{sid}").touch()
