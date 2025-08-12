@@ -1,28 +1,28 @@
 # 🔐 EncryptSync
 
-**EncryptSync** is a bidirectional folder sync tool powered by GPG.  
-It automatically encrypts files from a local plaintext folder into an encrypted mirror — ready to sync with tools like Syncthing or OwnCloud.  
+EncryptSync is a bidirectional folder sync tool powered by GPG.
+It automatically encrypts files from a local plaintext folder into an encrypted mirror — ready to sync with tools like Syncthing or OwnCloud.
 Decryption works the same way in reverse.
 
 ---
 
 ## ✨ Features
 
-- 🔁 Real-time encryption & decryption with `watchdog`  
-- 🔐 GPG-based per-file encryption using your public key  
-- 🧹 Optional plaintext auto-wipe on shutdown  
-- ⚙️ YAML configuration file  
-- 🧩 Modular CLI (`encrypt`, `decrypt`, `clear`, `install`, `uninstall`, `run`, `start`, `stop`, `status`, etc.)  
-- 💡 **Systemd integration** — system or user mode (auto-detected)
+- 🔁 Real-time encryption & decryption with `watchdog`
+- 🔐 GPG-based per-file encryption using your public key
+- 🧹 Optional plaintext auto-wipe on logout (per session)
+- ⚙️ YAML configuration file
+- 🧩 Modular CLI (`encrypt`, `decrypt`, `clear`, `install`, `uninstall`, `run`, `start`, `stop`, `status`, etc.)
+- 💡 Systemd user-mode integration via **PAM → queue → dispatcher** (per-session, no race with the user bus)
 
 ---
 
 ## ❓ Why EncryptSync?
 
-- Client-side encryption before syncing  
-- Per-file granularity (no giant encrypted containers)  
-- Fully scriptable and transparent  
-- Works with GPG agent, smartcards, and hardware tokens  
+- Client-side encryption before syncing
+- Per-file granularity (no giant encrypted containers)
+- Fully scriptable and transparent
+- Works with GPG agent, smartcards, and hardware tokens
 - Avoids corruption issues from container-based tools
 
 ---
@@ -31,31 +31,47 @@ Decryption works the same way in reverse.
 
 ### ✅ From `.deb` (recommended)
 
-Download from [GitHub Releases](https://github.com/justokaou/encryptsync/releases):
+Download from GitHub Releases and install:
 
 ```bash
 sudo apt install ./encryptsync_<version>_all.deb
 ```
 
 This installs:
-
-- Core files → `/usr/lib/encryptsync`  
+- Core files → `/usr/lib/encryptsync`
 - CLI tool → `/usr/bin/encryptsyncctl`
+- PAM profile → `/usr/share/pam-configs/encryptsync`
+- systemd **user** units → `/usr/lib/systemd/user/`
+  - `encryptsync-queue.path` (watches the per-session queue)
+  - `encryptsync-dispatch.timer` (periodic sweep)
+  - `encryptsync-dispatch.service` (oneshot dispatcher)
+  - `encryptsync@.service` (per-session daemon)
+  - `encryptsync-clear@.service` (per-session clear, oneshot)
 
-Then run:
+User units are enabled by default via a preset (no `systemctl` in maintainer scripts).
+
+Then run (optional but recommended to create/edit your config):
 
 ```bash
 encryptsyncctl install
 ```
 
-or for user mode (recommended if your GPG keys are in your session):
+---
+
+## 🔐 PAM integration (how sessions trigger EncryptSync)
+
+- On login (SSH/TTY/GDM), PAM writes a marker `open-<SID>` to `%t/encryptsync` (i.e., `/run/user/$UID/encryptsync`).
+- A systemd **path** unit (`encryptsync-queue.path`) or the **timer** (`encryptsync-dispatch.timer`) launches the **dispatcher**.
+- The dispatcher starts `encryptsync@<SID>.service` and `encryptsync-clear@<SID>.service`, then removes the marker.
+- On logout, PAM writes `close-<SID>`; the dispatcher stops the same services and cleans up plaintext.
+
+The PAM line is installed via `pam-auth-update` from the profile at `/usr/share/pam-configs/encryptsync` (inserted after `pam_systemd`; interactive sessions only). No manual edits to `/etc/pam.d/common-session*` are required.
+
+Tip: if you want your user manager running even without an open login session, enable linger:
 
 ```bash
-encryptsyncctl install --user
+loginctl enable-linger <your-username>
 ```
-
-> ℹ️ If you omit `--user`, the CLI will try to auto-detect your mode.  
-> This also applies to all service commands.
 
 ---
 
@@ -74,10 +90,11 @@ python3 encryptsyncctl.py run
 
 ## ⚙️ Configuration
 
-Config file location depends on mode:
+User config:
 
-- System mode → `/etc/encryptsync/config.yaml`  
-- User mode → `~/.encryptsync/config.yaml`
+```text
+~/.encryptsync/config.yaml
+```
 
 Example:
 
@@ -86,7 +103,7 @@ syncs:
   - name: personal
     plain_dir: /home/user/plain
     encrypted_dir: /home/user/encrypted
-    gpg_key: ABCDEF1234567890 # or GPG email
+    gpg_key: ABCDEF1234567890   # or a GPG email
     direction: both
 ```
 
@@ -118,12 +135,17 @@ Clear plaintext:
 encryptsyncctl clear
 ```
 
-Service control (auto mode detection):
+Service control (per current session, through the queue/dispatcher):
 
 ```bash
-encryptsyncctl start --service all
+encryptsyncctl start
 encryptsyncctl status
+encryptsyncctl stop
 ```
+
+Notes:
+- `start` / `stop` simulate login/logout for the **current** session by writing `open-<SID>` / `close-<SID>` into the queue and invoking the dispatcher.
+- `status` shows watcher/timer state and currently running instances (`encryptsync@<SID>.service`).
 
 Run in foreground:
 
@@ -135,74 +157,68 @@ encryptsyncctl run
 
 ### 📖 Help & Command Reference
 
-Show general help and list all commands:  
+Show general help and list all commands:
+
 ```bash
 encryptsyncctl --help
 ```
 
-Show detailed help for a specific command (example with `status`):  
+Show detailed help for a specific command:
+
 ```bash
 encryptsyncctl status --help
 ```
 
-> ℹ️ Every subcommand supports `--help` to display its available arguments and options.
+Every subcommand supports `--help` to display its options.
 
 ---
 
 ## 📄 Logs
 
-**System mode**:
-
-```
-/var/log/encryptsync/encryptsync.log
-/var/log/encryptsync/encryptsync-clear.log
-```
-
-**User mode**:
-
-```
+```text
 ~/.encryptsync/logs/encryptsync.log
 ~/.encryptsync/logs/encryptsync-clear.log
+~/.encryptsync/logs/encryptsync-cli.log
 ```
 
 ---
 
 ## 🔧 Uninstall
 
-Remove **only** configuration and log files (auto-detect mode):
+Remove config and logs (keeps the package itself):
 
 ```bash
 encryptsyncctl uninstall
-```
-
-Force without prompt:
-
-```bash
+# or
 encryptsyncctl uninstall --force
 ```
 
-> ⚠️ This does **not** remove systemd services or binaries.  
-> To remove the application itself (from a `.deb` install):
+>⚠️ This only removes the config.yaml and log files, not the full application.
+
+Remove the application (if installed from `.deb`):
 
 ```bash
 sudo apt purge encryptsync
 ```
 
+The PAM profile is removed via `pam-auth-update`; systemd user units are handled declaratively via presets.
+
 ---
 
-## 🛠️ Systemd Services
+## 🛠️ Systemd (user) units
 
-| Service | Description |  
-| --------------------- | ---------------------- |  
-| `encryptsync` | Main daemon |  
-| `encryptsync-clear` | Clears plaintext on shutdown |
+| Unit                           | Type  | Purpose                                              |
+|------------------------------- |-------|------------------------------------------------------|
+| `encryptsync-queue.path`       | user  | Watches `%t/encryptsync/{open,close}-*` markers      |
+| `encryptsync-dispatch.timer`   | user  | Periodically triggers the dispatcher (safety net)    |
+| `encryptsync-dispatch.service` | user  | One-shot: consumes queue and (start|stop)s sessions  |
+| `encryptsync@.service`         | user  | Per-session daemon instance (`%i` = session ID)      |
+| `encryptsync-clear@.service`   | user  | Per-session clear (oneshot; runs at start/stop)      |
 
 Check status:
 
 ```bash
-systemctl status encryptsync
-# or
-systemctl --user status encryptsync
+encryptsyncctl status
 ```
 
 ---
@@ -216,36 +232,55 @@ debuild -us -uc
 
 Output:
 
-```
+```text
 ../encryptsync_<version>_all.deb
 ```
+
+Packaging notes:
+- User units are enabled via `/usr/lib/systemd/user-preset/90-encryptsync.preset`.
+- PAM is configured via `/usr/share/pam-configs/encryptsync` (managed by `pam-auth-update`).
+- No `systemctl` calls in maintainer scripts (Lintian-friendly).
 
 ---
 
 ## 🧭 Portability
 
-Linux-only, relies on systemd for background services.
+Linux-only. Requires systemd (user manager) and PAM.
 
 ---
 
 ## 📁 Structure
 
-```
+```text
 encryptsync/
-├── cli/              # CLI commands
-├── crypto/           # GPG encryption logic
-├── debian/           # Packaging
-├── ressources/       # Logrotate configs
-├── scripts/          # Bash scripts
-├── utils/            # Helpers (logger, config, etc.)
-├── watcher/          # Real-time sync
-├── encryptsyncctl.py  # CLI entry
-├── main.py            # Daemon
-└── config.template.yaml
+├── cli/                       # CLI commands
+├── crypto/                    # GPG encryption logic
+├── debian/                    # Packaging (Debian)
+├── ressources/
+│   ├── pam/
+│   │   └── encryptsync        # pam-auth-update profile (adds pam_exec after pam_systemd)
+│   └── systemd/
+│       ├── user/
+│       │   ├── encryptsync-clear@.service     # per-session clear (oneshot)
+│       │   ├── encryptsync-dispatch.service   # dispatcher (oneshot)
+│       │   ├── encryptsync-dispatch.timer     # periodic sweep (safety net)
+│       │   ├── encryptsync-queue.path         # watches %t/encryptsync/{open,close}-*
+│       │   └── encryptsync@.service           # per-session daemon (%i = SID)
+│       └── user-preset/
+│           └── 90-encryptsync.preset          # enables queue.path + dispatch.timer by default
+├── scripts/
+│   ├── pam/
+│   │   └── pam-dispatch.sh    # PAM hook: writes open-/close-<SID> markers
+│   └── dispatch.sh            # runtime dispatcher (installed to /usr/lib/encryptsync/dispatch.sh)
+├── utils/                     # Helpers (logger, config, etc.)
+├── watcher/                   # Real-time file watching/sync
+├── encryptsyncctl.py          # CLI entry
+├── main.py                    # Daemon entrypoint
+└── config.template.yaml       # Default config template
 ```
 
 ---
 
 ## 📫 Feedback
 
-Report issues on [GitHub](https://github.com/justokaou/encryptsync/issues).
+Report issues on GitHub: https://github.com/justokaou/encryptsync/issues

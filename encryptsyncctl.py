@@ -6,7 +6,8 @@ from utils.config import load_config
 from cli.encrypt import encrypt_path
 from cli.decrypt import decrypt_path
 from cli.clear import clear_plain
-from cli.service import systemctl_cmd, status_cmd, print_service_status, print_service_enabled
+from cli.service import session_start, session_stop, watcher_enable, status_cmd
+from cli.utils.system import current_session_id
 from cli.install import install
 from cli.edit import edit
 from cli.run import start_program
@@ -91,27 +92,20 @@ def main():
         edit(restart=not args.no_restart)
 
     elif args.command in {"start", "stop", "restart", "status", "enable", "disable"}:
-        bases_map = {
-            "daemon": ["encryptsync"],
-            "clear": ["encryptsync-clear"],
-            "all": ["encryptsync", "encryptsync-clear"],
-        }
-        bases = bases_map[args.service]
-
         if args.command == "status":
-            if args.service == "all":
-                for base in ["encryptsync", "encryptsync-clear"]:
-                    print_service_status(base)
-                    print_service_enabled(base)
-            else:
-                base = "encryptsync" if args.service == "daemon" else "encryptsync-clear"
-                print_service_status(base)
-                print_service_enabled(base)
-        else:
-            ok = True
-            for base in bases:
-                ok &= systemctl_cmd(args.command, base)
+            status_cmd()
+            raise SystemExit(0)
+        if args.command in {"enable", "disable"}:
+            ok = watcher_enable(args.command == "enable")
             raise SystemExit(0 if ok else 1)
+
+        sid = current_session_id()
+        ok = True
+        if args.command in {"stop", "restart"}:
+            ok &= session_stop(sid)
+        if args.command in {"start", "restart"}:
+            ok &= session_start(sid)
+        raise SystemExit(0 if ok else 1)
 
     elif args.command == "run":
         start_program()
