@@ -1,89 +1,139 @@
 # cli/service.py
+# Queue/dispatcher-based control helpers for systemd --user integration.
+# We DO NOT call `systemctl --user start/stop encryptsync@<SID>` directly.
+# Instead, we:
+#   1) drop a marker into %t/encryptsync (open-<SID> / close-<SID>)
+#   2) trigger the dispatcher oneshot service
+# The dispatcher is the only component that starts/stops the instances.
+
 import os
-import subprocess
 from pathlib import Path
+from typing import List
+
 from utils.logger import get_logger
+
+# generic systemd --user helpers
+from cli.utils.service import (
+    run_userctl,
+    is_unit_active,
+    is_unit_enabled,
+    list_instances,
+    units_to_sids,
+)
 
 logger = get_logger("encryptsync-cli")
 
+# --- UI colors for simple status lines ---------------------------------------
 GREEN = "\033[92m"
 RED = "\033[91m"
 RESET = "\033[0m"
 
-WATCHER_UNITS = ("encryptsync-queue.path", "encryptsync-dispatch.timer")
-DISPATCH_UNIT = "encryptsync-dispatch.service"
-INSTANCE_GLOB = "encryptsync@*.service"
+# --- Unit names / patterns ----------------------------------------------------
+WATCHER_UNITS: tuple[str, str] = ("encryptsync-queue.path", "encryptsync-dispatch.timer")
+DISPATCH_UNIT: str = "encryptsync-dispatch.service"
 
-def _userctl(*args, check=False, quiet=True):
-    kw = {}
-    if quiet:
-        kw["stdout"] = subprocess.DEVNULL
-        kw["stderr"] = subprocess.DEVNULL
-    return subprocess.run(["systemctl", "--user", *args], check=check, **kw)
-
-def _is_enabled(unit: str) -> bool:
-    return _userctl("is-enabled", unit).returncode == 0
-
-def _is_active(unit: str) -> bool:
-    return _userctl("is-active", unit).returncode == 0
-
+# --- Queue helpers ------------------------------------------------------------
 def _queue_dir() -> Path:
+    """
+    Resolve the per-user runtime queue directory: %t/encryptsync
+    (%t == $XDG_RUNTIME_DIR or /run/user/<uid>)
+    """
     uid = os.getuid()
     xdg = os.environ.get("XDG_RUNTIME_DIR", f"/run/user/{uid}")
     q = Path(xdg) / "encryptsync"
     q.mkdir(parents=True, exist_ok=True)
     return q
 
+
 def dispatch_now() -> None:
-    _userctl("start", DISPATCH_UNIT)
+    """Trigger the dispatcher oneshot to process the queue immediately."""
+    run_userctl("start", DISPATCH_UNIT)
+
 
 def session_start(sid: str) -> bool:
+    """
+    Request start of the per-session instance via the queue.
+    The dispatcher will start encryptsync@<sid> and encryptsync-clear@<sid>.
+    """
     (_queue_dir() / f"open-{sid}").touch()
     dispatch_now()
-    return True  # le dispatcher démarre l'instance
+    return True
+
 
 def session_stop(sid: str) -> bool:
+    """
+    Request stop of the per-session instance via the queue.
+    The dispatcher will stop encryptsync@<sid> and encryptsync-clear@<sid>.
+    """
     (_queue_dir() / f"close-{sid}").touch()
     dispatch_now()
     return True
 
-def watcher_enable(enable: bool, start_now: bool = True) -> bool:
-    cmd = "enable" if enable else "disable"
-    ok = _userctl(cmd, *WATCHER_UNITS).returncode == 0
-    if enable and start_now:
-        _userctl("start", *WATCHER_UNITS)
+
+def is_instance_active(sid: str) -> bool:
+    """Check if encryptsync@<sid>.service is currently active."""
+    return is_unit_active(f"encryptsync@{sid}.service")
+
+
+def restart_session(sid: str) -> bool:
+    """
+    Idempotent restart of the current session instance through the queue:
+    - if active, request stop
+    - then request start
+    """
+    if is_instance_active(sid):
+        session_stop(sid)
+    return session_start(sid)
+
+
+def restart_all_sessions() -> bool:
+    """
+    Restart all active session instances via the queue/dispatcher.
+    """
+    ok = True
+    for sid in units_to_sids(list_instances("encryptsync@*.service")):
+        ok &= restart_session(sid)
     return ok
 
-def list_instances() -> list[str]:
-    out = subprocess.run(
-        ["systemctl", "--user", "--plain", "--no-legend", "--no-pager", "list-units", INSTANCE_GLOB],
-        capture_output=True, text=True
-    )
-    if out.returncode != 0 or not out.stdout.strip():
-        return []
-    return [line.split()[0] for line in out.stdout.strip().splitlines()]
 
-# ---- Affichage (status) -----------------------------------------------------
+def watcher_enable(enable: bool, start_now: bool = True) -> bool:
+    """
+    Enable/disable the queue watcher (.path) and the safety-net (.timer).
+    This replaces the old 'enable/start encryptsync*' behavior.
+    """
+    cmd = "enable" if enable else "disable"
+    ok = run_userctl(cmd, *WATCHER_UNITS).returncode == 0
+    if enable and start_now:
+        # Start both the .path and the .timer (idempotent)
+        run_userctl("start", *WATCHER_UNITS)
+    return ok
 
-def print_enabled(unit: str, label: str | None = None):
+
+# --- Pretty status printing ---------------------------------------------------
+def _print_enabled(unit: str, label: str | None = None) -> None:
     label = label or unit
-    status = f"{GREEN}[enabled]{RESET}" if _is_enabled(unit) else f"{RED}[disabled]{RESET}"
+    status = f"{GREEN}[enabled]{RESET}" if is_unit_enabled(unit) else f"{RED}[disabled]{RESET}"
     logger.info(f"{label:<28}: {status}")
 
-def print_active(unit: str, label: str | None = None):
+
+def _print_active(unit: str, label: str | None = None) -> None:
     label = label or unit
-    status = f"{GREEN}[ok]{RESET}" if _is_active(unit) else f"{RED}[down]{RESET}"
+    status = f"{GREEN}[ok]{RESET}" if is_unit_active(unit) else f"{RED}[down]{RESET}"
     logger.info(f"{label:<28}: {status}")
 
-def status_cmd():
-    # Watchers (déclencheurs)
-    print_active("encryptsync-queue.path",   "queue.path active")
-    print_enabled("encryptsync-queue.path",  "queue.path enabled")
-    print_active("encryptsync-dispatch.timer","dispatch.timer active")
-    print_enabled("encryptsync-dispatch.timer","dispatch.timer enabled")
 
-    # Instances en cours
-    inst = list_instances()
+def status_cmd() -> None:
+    """
+    Show watcher/timer state and the list of currently running instances.
+    """
+    # Watchers (triggers)
+    _print_active("encryptsync-queue.path",    "queue.path active")
+    _print_enabled("encryptsync-queue.path",   "queue.path enabled")
+    _print_active("encryptsync-dispatch.timer","dispatch.timer active")
+    _print_enabled("encryptsync-dispatch.timer","dispatch.timer enabled")
+
+    # Active instances
+    inst = list_instances("encryptsync@*.service")
     if inst:
         logger.info("instances:")
         for u in inst:
@@ -91,34 +141,55 @@ def status_cmd():
     else:
         logger.info("instances: (none)")
 
-# Back-compat (si du code appelle encore ces noms) ----------------------------
 
+# --- Back-compat shim (for older callers) ------------------------------------
 def enable_services() -> bool:
-    # ancien comportement “enable/start encryptsync*” remplacé par l’activation des watchers
+    """
+    Legacy entry point used by older code paths.
+    Now maps to enabling the watcher + timer (user units).
+    """
     return watcher_enable(True, start_now=True)
 
+
 def systemctl_cmd(action: str, service: str = "encryptsync") -> bool:
-    # ne pilote plus les templates @ ; on expose juste enable/disable/start/stop pour watchers/dispatch
+    """
+    Legacy shim to avoid breaking imports.
+    We no longer control encryptsync@*.service directly from the CLI here.
+    Supported:
+      - enable/disable -> watcher_enable()
+      - start (only for 'dispatch') -> dispatch_now()
+      - status -> status_cmd()
+    """
     if action in {"enable", "disable"}:
         return watcher_enable(action == "enable", start_now=(action == "enable"))
     if action == "start" and service == "dispatch":
-        dispatch_now(); return True
+        dispatch_now()
+        return True
     if action == "status":
-        status_cmd(); return True
+        status_cmd()
+        return True
     logger.error(f"[{action}] unsupported direct systemctl on '{service}' with queue/dispatcher model")
     return False
 
-def print_service_status(service: str, label: str | None = None):
-    # redirige vers watchers; pour les instances, utiliser status_cmd()
+
+def print_service_status(service: str, label: str | None = None) -> None:
+    """
+    Legacy function kept for older callers.
+    For encryptsync/encryptsync-clear, we display watcher/timer + instances.
+    """
     if service in {"encryptsync", "encryptsync-clear"}:
         status_cmd()
     else:
-        print_active(service, label)
+        _print_active(service, label)
 
-def print_service_enabled(service: str, label: str | None = None):
+
+def print_service_enabled(service: str, label: str | None = None) -> None:
+    """
+    Legacy function kept for older callers.
+    For dynamic templates (@), "enabled" is meaningless; report watchers instead.
+    """
     if service in {"encryptsync", "encryptsync-clear"}:
-        # ceux-ci sont dynamiques; on montre les watchers à la place
-        print_enabled("encryptsync-queue.path",  "queue.path enabled")
-        print_enabled("encryptsync-dispatch.timer", "dispatch.timer enabled")
+        _print_enabled("encryptsync-queue.path",     "queue.path enabled")
+        _print_enabled("encryptsync-dispatch.timer", "dispatch.timer enabled")
     else:
-        print_enabled(service, label)
+        _print_enabled(service, label)

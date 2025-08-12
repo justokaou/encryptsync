@@ -1,52 +1,75 @@
+# cli/utils/service.py
+# Low-level helpers for interacting with systemd --user.
+# These utilities are generic and do not encode EncryptSync-specific logic,
+# so they can be reused by higher-level modules.
+
 import subprocess
 import time
-from cli.utils.system import current_session_id
+from typing import List
 
 
-def _unit(name: str) -> str:
-    # accept "encryptsync", "encryptsync@SID"
-    return name if name.endswith(".service") else f"{name}.service"
+def run_userctl(*args: str, check: bool = False, quiet: bool = True) -> subprocess.CompletedProcess:
+    """
+    Run `systemctl --user ...`.
+    - quiet=True: suppress stdout/stderr (good for probes like is-active/is-enabled).
+    - check=True: raise CalledProcessError on non-zero return code.
+    """
+    kw = {}
+    if quiet:
+        kw["stdout"] = subprocess.DEVNULL
+        kw["stderr"] = subprocess.DEVNULL
+    return subprocess.run(["systemctl", "--user", *args], check=check, **kw)
 
 
-def unit_name(base: str) -> str:
-    # Always user scope with a session-bound instance
-    sid = current_session_id()
-    return f"{base}@{sid}.service"
+def is_unit_active(unit: str) -> bool:
+    """Return True if the given user unit is currently active."""
+    return run_userctl("is-active", unit).returncode == 0
 
 
-def is_service_running(service_name: str = "encryptsync") -> bool:
-    rc = subprocess.run(["systemctl", "--user", "is-active", "--quiet", _unit(service_name)]).returncode
-    return rc == 0
+def is_unit_enabled(unit: str) -> bool:
+    """Return True if the given user unit is enabled."""
+    return run_userctl("is-enabled", unit).returncode == 0
 
 
-def is_service_enabled(service_name: str = "encryptsync") -> bool:
-    rc = subprocess.run(["systemctl", "--user", "is-enabled", "--quiet", _unit(service_name)]).returncode
-    return rc == 0
-
-
-def wait_active(service_name: str, timeout: float = 15.0, interval: float = 0.3) -> bool:
+def wait_unit_active(unit: str, timeout: float = 15.0, interval: float = 0.3) -> bool:
+    """
+    Wait until a user unit is active, up to `timeout` seconds.
+    Returns True if it became active, False on timeout.
+    """
     deadline = time.time() + timeout
-    unit = _unit(service_name)
     while time.time() < deadline:
-        if subprocess.run(["systemctl", "--user", "is-active", "--quiet", unit]).returncode == 0:
+        if is_unit_active(unit):
             return True
         time.sleep(interval)
     return False
 
 
-def is_active_or_exited(service_name: str) -> bool:
-    unit = _unit(service_name)
+def list_units(glob: str) -> List[str]:
+    """
+    Return the list of user unit names matching `glob` (e.g. 'encryptsync@*.service').
+    """
     out = subprocess.run(
-        ["systemctl", "--user", "show", unit, "-p", "Type,ActiveState,SubState", "--value"],
+        ["systemctl", "--user", "--plain", "--no-legend", "--no-pager", "list-units", glob],
         capture_output=True, text=True
     )
-    if out.returncode != 0:
-        return False
-    vals = [line.strip() for line in out.stdout.splitlines() if line.strip()]
-    try:
-        typ, active, sub = vals
-    except ValueError:
-        return False
-    if typ == "oneshot":
-        return is_service_enabled(service_name)
-    return active == "active"
+    if out.returncode != 0 or not out.stdout.strip():
+        return []
+    return [line.split()[0] for line in out.stdout.strip().splitlines()]
+
+
+def list_instances(pattern: str = "encryptsync@*.service") -> List[str]:
+    """
+    Convenience wrapper to list EncryptSync instance unit names.
+    """
+    return list_units(pattern)
+
+
+def units_to_sids(units: List[str]) -> List[str]:
+    """
+    Extract <SID> from instance unit names: 'encryptsync@<SID>.service' -> '<SID>'.
+    """
+    sids: List[str] = []
+    for u in units:
+        if u.startswith("encryptsync@") and u.endswith(".service"):
+            sids.append(u[len("encryptsync@"):-len(".service")])
+    return sids
