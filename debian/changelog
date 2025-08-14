@@ -1,5 +1,6 @@
-encryptsync (0.3.0) UNRELEASED; urgency=medium
+encryptsync (0.3.0) stable; urgency=medium
 
+  [ JustOkaou ]
   * Added full support for user-level systemd services with PAM integration
     - Services start automatically on user login
     - Services stop automatically on user logout
@@ -14,7 +15,7 @@ encryptsync (0.3.0) UNRELEASED; urgency=medium
   * Updated README with simplified structure and `--help` usage examples
   * Internal refactors and minor bug fixes for better stability
 
- -- JustOkaou <contact@justokaou.xyz>  Sat, 09 Aug 2025 14:05:19 +0200
+ -- JustOkaou <contact@justokaou.xyz>  Thu, 14 Aug 2025 19:42:08 +0200
 
 encryptsync (0.2.0) stable; urgency=medium
 

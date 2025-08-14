@@ -26,9 +26,9 @@ def copy_default_config(project_path, config_path):
     shutil.copy(src, dst)
     logger.info(f"[install] Default config copied from {src} to {dst}.")
 
-def maybe_edit_config(paths, user=False):
+def maybe_edit_config(paths):
     if input("Edit config now? [y/N]: ").lower() == "y":
-        edit(paths, context="install", user=user)
+        edit(paths, context="install")
 
 def self_test_user_mode() -> bool:
     """
