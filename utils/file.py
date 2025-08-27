@@ -1,4 +1,13 @@
 import os
+import threading, time
+
+ORPHAN_GRACE_SECONDS = 30  # délai avant de supprimer le clair si le .gpg a disparu “sans intention”
+TOMBSTONE_DIRNAME = ".encryptsync-deletes"
+
+def tombstone_path(encrypted_dir: str, rel_path: str) -> str:
+    p = os.path.join(encrypted_dir, TOMBSTONE_DIRNAME, rel_path + ".del")
+    os.makedirs(os.path.dirname(p), exist_ok=True)
+    return p
 
 def is_valid_file(path: str) -> bool:
     filename = os.path.basename(path)
