@@ -2,7 +2,7 @@ from watchdog.events import FileSystemEventHandler
 from crypto.gpg import encrypt_file, decrypt_file 
 from utils.cache import load_cache, save_cache
 from utils.hash import file_sha256
-from utils.file import is_valid_file, is_forbidden_file, tombstone_path, TOMBSTONE_DIRNAME, ORPHAN_GRACE_SECONDS
+from utils.file import is_valid_file, is_forbidden_file, tombstone_path, TOMBSTONE_DIRNAME, ORPHAN_GRACE_SECONDS, is_stable
 from utils.recent import mark_recent_output, is_recent_output
 from filelock import FileLock, Timeout
 import os, time
@@ -66,24 +66,67 @@ class EncryptHandler(FileSystemEventHandler):
             self.processing.remove(rel_path)
 
     def on_deleted(self, event):
-        if is_locked() or event.is_directory or not is_valid_file(event.src_path):
+        if is_locked():
+            return
+
+        # Plaintext directory deleted
+        if event.is_directory:
+            rel_dir = os.path.relpath(event.src_path, self.config.plain_dir)
+            # Clean all cache entries under this directory
+            prefix = rel_dir.rstrip(os.sep) + os.sep
+            to_drop = [k for k in list(self.cache.keys()) if k.startswith(prefix)]
+            for k in to_drop:
+                self.cache.pop(k, None)
+
+            # For each .gpg file under the corresponding encrypted directory, create tombstone and delete
+            enc_base = os.path.join(self.config.encrypted_dir, rel_dir)
+            if os.path.isdir(enc_base):
+                for root, _, files in os.walk(enc_base):
+                    for f in files:
+                        if not f.endswith(".gpg"):
+                            continue
+                        gpg_path = os.path.join(root, f)
+                        rel_from_enc = os.path.splitext(os.path.relpath(gpg_path, self.config.encrypted_dir))[0]
+
+                        # tombstone
+                        tpath = tombstone_path(self.config.encrypted_dir, rel_from_enc)
+                        os.makedirs(os.path.dirname(tpath), exist_ok=True)
+                        try:
+                            with open(tpath, "w") as tf:
+                                tf.write(f"ts={int(time.time())}\nrel={rel_from_enc}\n")
+                            logger.info(f"[tombstone] {tpath}")
+                        except Exception as e:
+                            logger.error(f"[Error] Failed to create tombstone {tpath}: {e}")
+
+                        # delete .gpg
+                        try:
+                            os.remove(gpg_path)
+                            logger.info(f"[delete] {gpg_path}")
+                        except Exception as e:
+                            logger.error(f"[Error] Failed to delete encrypted {gpg_path}: {e}")
+
+            save_cache(self.cache)
+            return
+
+        # Normal file behavior
+        if not is_valid_file(event.src_path):
+            return
+        if is_forbidden_file(event.src_path, self.config.plain_dir, "encrypt"):
+            logger.warning(f"[WARN] Skipping invalid file in plain_dir: {event.src_path}")
             return
 
         rel_path = os.path.relpath(event.src_path, self.config.plain_dir)
         encrypted_path = os.path.join(self.config.encrypted_dir, rel_path + ".gpg")
 
-        # 1) toujours poser un tombstone côté chiffré (propagation de l’intention)
         tpath = tombstone_path(self.config.encrypted_dir, rel_path)
         try:
             os.makedirs(os.path.dirname(tpath), exist_ok=True)
-            # un petit contenu avec un horodatage aide au debug
             with open(tpath, "w") as f:
                 f.write(f"ts={int(time.time())}\nrel={rel_path}\n")
             logger.info(f"[tombstone] {tpath}")
         except Exception as e:
             logger.error(f"[Error] Failed to create tombstone {tpath}: {e}")
 
-        # 2) si le .gpg existe déjà, on le supprime maintenant (Syncthing répliquera)
         if os.path.exists(encrypted_path):
             try:
                 os.remove(encrypted_path)
@@ -91,7 +134,6 @@ class EncryptHandler(FileSystemEventHandler):
             except Exception as e:
                 logger.error(f"[Error] Failed to delete encrypted {encrypted_path}: {e}")
 
-        # 3) mettre à jour le cache
         self.cache.pop(rel_path, None)
         save_cache(self.cache)
 
@@ -142,35 +184,47 @@ class DecryptHandler(FileSystemEventHandler):
         self.scanning = False
 
     def on_created(self, event):
-        self._handle_event(event)
+        self._handle_path(event.src_path)
 
     def on_modified(self, event):
-        self._handle_event(event)
+        self._handle_path(event.src_path)
 
-    def _handle_event(self, event):
-        if is_locked() or self.scanning or event.is_directory:
-            return
+    def on_moved(self, event):
+        # Syncthing often writes to a temp file then renames → handle the destination
+        self._handle_path(event.dest_path)
 
-        if event.src_path.endswith(".del"):
-            self._apply_tombstone(event.src_path)
-            return
-    
-        if not event.src_path.endswith(".gpg"):
-            return
-        
-        if is_forbidden_file(event.src_path, self.config.encrypted_dir, "decrypt"):
-            logger.warning(f"[WARN] Skipping invalid file in encrypted_dir: {event.src_path}")
-            return
-        
-        if is_recent_output(event.src_path):
+    def _handle_path(self, path: str):
+        if is_locked() or self.scanning:
             return
 
-        rel_path = os.path.splitext(os.path.relpath(event.src_path, self.config.encrypted_dir))[0]
+        # Tombstones first (process regardless of is_valid_file)
+        if path.endswith(".del"):
+            logger.info(f"[tombstone] detected: {path}")
+            self._apply_tombstone(path)
+            return
+
+        # Only handle .gpg files for decryption (ignore everything else)
+        if not path.endswith(".gpg"):
+            return
+
+        # Filtering (keep .del out of this filter; here we are on .gpg)
+        if is_forbidden_file(path, self.config.encrypted_dir, "decrypt"):
+            logger.warning(f"[WARN] Skipping invalid file in encrypted_dir: {path}")
+            return
+
+        # Bounce prevention + stability (skip while Syncthing may still be writing)
+        if is_recent_output(path):
+            return
+        if not is_stable(path):
+            return
+
+        rel_path = os.path.splitext(os.path.relpath(path, self.config.encrypted_dir))[0]
         if rel_path in self.processing:
             return
 
         output_path = os.path.join(self.config.plain_dir, rel_path)
 
+        # If plaintext already exists and matches cache → skip
         if os.path.exists(output_path):
             current_hash = file_sha256(output_path)
             if self.cache.get(rel_path) == current_hash:
@@ -179,20 +233,22 @@ class DecryptHandler(FileSystemEventHandler):
         self.processing.add(rel_path)
         try:
             decrypt_file(
-                input_path=event.src_path,
+                input_path=path,
                 output_dir=self.config.plain_dir,
                 base_dir=self.config.encrypted_dir,
                 logger=logger
             )
             if os.path.exists(output_path):
+                # mark to avoid immediate re-encrypt bounce
                 mark_recent_output(output_path)
                 file_hash = file_sha256(output_path)
                 self.cache[rel_path] = file_hash
                 save_cache(self.cache)
         except Exception as e:
-            logger.error(f"[Error] Failed to decrypt {event.src_path}: {e}")
+            logger.error(f"[Error] Failed to decrypt {path}: {e}")
         finally:
             self.processing.remove(rel_path)
+
 
     def on_deleted(self, event):
         if is_locked() or event.is_directory or not event.src_path.endswith(".gpg"):
@@ -201,21 +257,23 @@ class DecryptHandler(FileSystemEventHandler):
         rel_path = os.path.splitext(os.path.relpath(event.src_path, self.config.encrypted_dir))[0]
         plain_path = os.path.join(self.config.plain_dir, rel_path)
 
+        # if tombstone already exists, apply it immediately
         tpath = tombstone_path(self.config.encrypted_dir, rel_path)
         if os.path.exists(tpath):
             self._apply_tombstone(tpath)
             return
 
+        # else, start a delayed deletion thread
         threading.Thread(
             target=self._delayed_delete_plain,
             args=(plain_path, event.src_path, rel_path),
             daemon=True
         ).start()
 
-
     def scan_existing_files(self):
         self.scanning = True
         try:
+            # apply tombstones first
             tdir = os.path.join(self.config.encrypted_dir, TOMBSTONE_DIRNAME)
             if os.path.isdir(tdir):
                 for root, _, files in os.walk(tdir):
@@ -223,6 +281,7 @@ class DecryptHandler(FileSystemEventHandler):
                         if f.endswith(".del"):
                             self._apply_tombstone(os.path.join(root, f))
 
+            # then decrypt existing .gpg files
             for root, _, files in os.walk(self.config.encrypted_dir):
                 for f in files:
                     if not f.endswith(".gpg"):
@@ -248,6 +307,7 @@ class DecryptHandler(FileSystemEventHandler):
                             logger=logger
                         )
                         if os.path.exists(plain_path):
+                            mark_recent_output(plain_path)  # bounce prevention
                             file_hash = file_sha256(plain_path)
                             self.cache[rel_path] = file_hash
                     except Exception as e:
@@ -258,52 +318,16 @@ class DecryptHandler(FileSystemEventHandler):
             self.scanning = False
             logger.info("Scan completed for decryption handler.")
 
-        def _apply_tombstone(self, tpath: str):
-            try:
-                rel_with_ext = os.path.relpath(tpath, os.path.join(self.config.encrypted_dir, TOMBSTONE_DIRNAME))
-                rel_path = rel_with_ext[:-4] if rel_with_ext.endswith(".del") else rel_with_ext
-                gpg_path = os.path.join(self.config.encrypted_dir, rel_path + ".gpg")
-                plain_path = os.path.join(self.config.plain_dir, rel_path)
+    # Helpers
 
-                # supprimer le clair si présent
-                if os.path.exists(plain_path):
-                    try:
-                        os.remove(plain_path)
-                        logger.info(f"[delete] {plain_path}")
-                    except Exception as e:
-                        logger.error(f"[Error] Failed to delete plaintext {plain_path}: {e}")
+    def _apply_tombstone(self, tpath: str):
+        try:
+            base = os.path.join(self.config.encrypted_dir, TOMBSTONE_DIRNAME)
+            rel_with_ext = os.path.relpath(tpath, base)
+            rel_path = rel_with_ext[:-4] if rel_with_ext.endswith(".del") else rel_with_ext
 
-                # si le .gpg est apparu entre-temps, le supprimer aussi (idempotent)
-                if os.path.exists(gpg_path):
-                    try:
-                        os.remove(gpg_path)
-                        logger.info(f"[delete] {gpg_path}")
-                    except Exception as e:
-                        logger.error(f"[Error] Failed to delete encrypted {gpg_path}: {e}")
-
-                # nettoyer cache et tombstone
-                self.cache.pop(rel_path, None)
-                save_cache(self.cache)
-            finally:
-                try:
-                    os.remove(tpath)
-                    logger.info(f"[tombstone-applied] {tpath}")
-                except FileNotFoundError:
-                    pass
-                except Exception as e:
-                    logger.error(f"[Error] Failed to remove tombstone {tpath}: {e}")
-
-        def _delayed_delete_plain(self, plain_path: str, gpg_path: str, rel_path: str):
-            deadline = time.time() + ORPHAN_GRACE_SECONDS
-            while time.time() < deadline:
-                if os.path.exists(gpg_path):
-                    logger.info(f"[delete-cancel] {rel_path}: encrypted reappeared during grace")
-                    return
-                # si un tombstone arrive pendant l'attente, appliquer tout de suite
-                tpath = tombstone_path(self.config.encrypted_dir, rel_path)
-                if os.path.exists(tpath):
-                    self._apply_tombstone(tpath); return
-                time.sleep(1.0)
+            gpg_path = os.path.join(self.config.encrypted_dir, rel_path + ".gpg")
+            plain_path = os.path.join(self.config.plain_dir, rel_path)
 
             if os.path.exists(plain_path):
                 try:
@@ -311,5 +335,42 @@ class DecryptHandler(FileSystemEventHandler):
                     logger.info(f"[delete] {plain_path}")
                 except Exception as e:
                     logger.error(f"[Error] Failed to delete plaintext {plain_path}: {e}")
+
+            if os.path.exists(gpg_path):
+                try:
+                    os.remove(gpg_path)
+                    logger.info(f"[delete] {gpg_path}")
+                except Exception as e:
+                    logger.error(f"[Error] Failed to delete encrypted {gpg_path}: {e}")
+
             self.cache.pop(rel_path, None)
             save_cache(self.cache)
+        finally:
+            try:
+                os.remove(tpath)
+                logger.info(f"[tombstone-applied] {tpath}")
+            except FileNotFoundError:
+                pass
+            except Exception as e:
+                logger.error(f"[Error] Failed to remove tombstone {tpath}: {e}")
+
+    def _delayed_delete_plain(self, plain_path: str, gpg_path: str, rel_path: str):
+        deadline = time.time() + ORPHAN_GRACE_SECONDS
+        while time.time() < deadline:
+            if os.path.exists(gpg_path):
+                logger.info(f"[delete-cancel] {rel_path}: encrypted reappeared during grace")
+                return
+            tpath = tombstone_path(self.config.encrypted_dir, rel_path)
+            if os.path.exists(tpath):
+                self._apply_tombstone(tpath)
+                return
+            time.sleep(1.0)
+
+        if os.path.exists(plain_path):
+            try:
+                os.remove(plain_path)
+                logger.info(f"[delete] {plain_path}")
+            except Exception as e:
+                logger.error(f"[Error] Failed to delete plaintext {plain_path}: {e}")
+        self.cache.pop(rel_path, None)
+        save_cache(self.cache)

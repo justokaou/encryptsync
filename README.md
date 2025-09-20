@@ -31,7 +31,7 @@ Decryption works the same way in reverse.
 
 ### ✅ From `.deb` (recommended)
 
-Download from GitHub Releases and install:
+Download from [Releases](https://git.justokaou.xyz/justokaou/encryptsync/releases) and install:
 
 ```bash
 sudo apt install ./encryptsync_<version>_all.deb
@@ -175,10 +175,20 @@ Every subcommand supports `--help` to display its options.
 
 ## 📄 Logs
 
+User :
+
 ```text
 ~/.encryptsync/logs/encryptsync.log
 ~/.encryptsync/logs/encryptsync-clear.log
 ~/.encryptsync/logs/encryptsync-cli.log
+```
+
+Root :
+
+```text
+/var/log/encryptsync/encryptsync.log
+/var/log/encryptsync/encryptsync-clear.log
+/var/log/encryptsync/encryptsync-cli.log
 ```
 
 ---
@@ -283,4 +293,4 @@ encryptsync/
 
 ## 📫 Feedback
 
-Report issues on GitHub: https://github.com/justokaou/encryptsync/issues
+Report issues : https://git.justokaou.xyz/justokaou/encryptsync/issues

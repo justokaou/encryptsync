@@ -1,5 +1,5 @@
 import os
-import threading, time
+import time
 
 ORPHAN_GRACE_SECONDS = 30  # délai avant de supprimer le clair si le .gpg a disparu “sans intention”
 TOMBSTONE_DIRNAME = ".encryptsync-deletes"
@@ -24,4 +24,17 @@ def is_forbidden_file(path: str, base_dir: str, mode: str) -> bool:
         return True
     if mode == "decrypt" and not rel.endswith(".gpg"):
         return True
+    return False
+
+def is_stable(path, checks=3, delay=0.2):
+    try:
+        prev = -1
+        for _ in range(checks):
+            now = os.path.getsize(path)
+            if now == prev:
+                return True
+            prev = now
+            time.sleep(delay)
+    except FileNotFoundError:
+        return False
     return False

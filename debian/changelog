@@ -1,3 +1,18 @@
+encryptsync (0.4.1) stable; urgency=medium
+
+  [ JustOkaou ]
+  * sync: add tombstones + 30s grace window to prevent cascaded deletes
+    with Syncthing.
+  * change delete semantics: no plaintext > encrypted implicit deletes;
+    propagate via tombstones or .gpg removal.
+  * debounce: mark decrypt outputs to avoid re-encrypt loops; safer
+    startup scans.
+
+  [ JustOkaou ]
+  * fix(sync): correctly process .del tombstones.
+
+ -- JustOkaou <contact@justokaou.xyz>  Sat, 20 Sep 2025 22:22:58 +0200
+
 encryptsync (0.3.0) stable; urgency=medium
 
   [ JustOkaou ]
